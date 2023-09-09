@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js"></script>
+        <script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script>
+        <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
+        <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+        <style>
+            .contenteditable:not(:focus) {
+                border: none;
+                box-shadow: none;
+            }
+            .option.field:not(:last-child) {
+                margin-bottom: .25rem;
+            }
+            .mdi-drag-vertical-variant {
+                cursor: pointer;
+            }
+        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <script>
+            function updateDescription(id, content) {
+                const delay = 1000;
+                clearTimeout(window.timeout);
+                window.timeout = setTimeout(async () => {
+                    const body = new URLSearchParams()
+                    body.set("description", content)
+                    await fetch(`/question/description?questionId=${id}`, { body, method: "PUT" })
+                }, delay)
+            }
+
+            function setupEditor(id) {
+                let quill = new Quill(`#editor${id}`, {
+                    theme: 'snow'
+                })
+                quill.on("text-change", (delta, source) => {
+                    updateDescription(id, quill.root.innerHTML)
+                })
+            }
+
+            htmx.onLoad((el) => {
+                for (let editor of el.getElementsByClassName('editor')) {
+                    let quill = new Quill(editor, {
+                        theme: 'snow'
+                    })
+                    quill.on("text-change", (delta, source) => {
+                        updateDescription(editor.dataset.id, quill.root.innerHTML)
+                    })
+                }
+                for (let options of el.getElementsByClassName('options')) {
+                    Sortable.create(options, { onEnd: async (e) => {
+                            const body = new URLSearchParams()
+                            body.set("old", e.oldIndex)
+                            body.set("new", e.newIndex)
+                            await fetch(`/question/option/reorder?questionId=${e.item.dataset.id}`, { body, method: "POST" })
+                        }})
+                }
+            })
+        </script>
+        <div class="section">
+            <button class="button is-primary level" hx-post="/question" hx-target="#questions" hx-swap="beforeend">Add an Amazing question</button>
+            <div id="questions">
+                {{block "questions" .}}
+                {{range .}}
+                    {{template "question.html" .}}
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+    </body>
+</html>

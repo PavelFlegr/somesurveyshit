@@ -1,0 +1,56 @@
+<div class="box question">
+    <div class="level">
+        <div class="level-item level-left">
+            {{block "title" .}}
+            <div class="field">
+                <div class="control">
+                    <input placeholder="An Amazing title" class="input contenteditable" name="title"
+                           value="{{.Title}}"
+                           hx-put="/question/title?questionId={{.Id}}"
+                           hx-trigger="keyup changed delay:1s"
+                           hx-swap="none">
+                </div>
+            </div>
+            {{end}}
+        </div>
+        <div class="level-item level-right">
+            <button class="button is-danger" hx-delete="/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Delete</button>
+        </div>
+    </div>
+    <div class="field editor" data-id="{{.Id}}">{{ unescape .Description }}</div>
+    <p class="subtitle">Question Options</p>
+    <form class="field" hx-post="/question/option?questionId={{.Id}}" hx-target="next ul" hx-swap="beforeend">
+        <div class="field has-addons">
+            <div class="control">
+                <input placeholder="A new Amazing option" class="input" name="option">
+            </div>
+            <div class="control">
+                <button class="button is-info">Add</button>
+            </div>
+        </div>
+    </form>
+    <ul class="field options">
+        {{range $option := .Options}}
+        {{block "option" $option}}
+        <li class="field has-addons option" data-id="{{.QuestionId}}">
+            <span class="icon is-medium">
+                <i class="mdi mdi-drag-vertical-variant"></i>
+            </span>
+            <div class="control">
+                <input placeholder="An Amazing option" class="input contenteditable is-small" name="option" value="{{.Value}}"
+                       hx-swap="outerHTML"
+                       hx-target="closest li"
+                       hx-put="/question/option?questionId={{.QuestionId}}&optionId={{.Id}}"
+                       hx-trigger="keyup changed delay:1s">
+            </div>
+
+            <div class="control">
+                <button class="button is-danger is-small" hx-delete="/question/option?questionId={{.QuestionId}}&optionId={{.Id}}"
+                        hx-target="closest li"
+                        hx-swap="outerHTML">Remove</button>
+            </div>
+        </li>
+        {{end}}
+        {{end}}
+    </ul>
+</div>
