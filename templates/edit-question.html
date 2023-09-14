@@ -1,0 +1,51 @@
+<div class="box question">
+    <form hx-put="/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML" hx-vals="js:description:htmx.find(htmx.find('#editor{{.Id}}'), '.ql-editor').innerHTML">
+        <progress class="progress is-small is-primary htmx-indicator question-loader m-0" max="100">15%</progress>
+        <div class="level">
+            <div class="level-item level-left">
+                {{block "title" .}}
+                <div class="field">
+                    <div class="control">
+                        <input placeholder="An Amazing title" class="input" name="title"
+                               value="{{.Title}}"
+                               hx-put="/question/title?questionId={{.Id}}"
+                               hx-trigger="keyup changed delay:1s"
+                               hx-swap="none">
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            <div class="level-item level-right">
+                <button class="button mr-2 is-inverted" hx-get="/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Cancel</button>
+                <button hx-indicator="previous .question-loader" class="button is-primary">Save</button>
+            </div>
+        </div>
+        <div class="field editor" id="editor{{.Id}}">{{ unescape .Description }}</div>
+        <p class="subtitle">Question Options</p>
+        <div class="field options">
+            {{range $option := .Options}}
+            {{block "option" .}}
+            <div class="field has-addons option">
+        <span class="icon is-medium drag-handle is-clickable">
+            <i class="mdi mdi-drag-vertical-variant"></i>
+        </span>
+                <div class="control">
+                    <input placeholder="An Amazing option" class="input is-small" name="option" value="{{.Label}}">
+                </div>
+
+                <div class="control">
+                    <button _="on click remove closest .option" class="button is-danger is-small"> <span class="mdi mdi-trash-can-outline"></span></button>
+                </div>
+            </div>
+            {{end}}
+            {{end}}
+        </div>
+    </form>
+    <span class="is-clickable" hx-get="/option" hx-target="previous .options" hx-swap="beforeend">
+        <span class="icon is-medium">
+            <span class="mdi mdi-plus"></span>
+        </span>
+        <a>Add</a>
+    </span>
+</div>
+

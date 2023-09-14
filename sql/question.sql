@@ -1,19 +1,21 @@
+drop table if exists surveys cascade;
 drop table if exists questions cascade;
-drop table if exists options;
+
+create table surveys (
+    id serial primary key,
+    title varchar(255) not null,
+    created timestamptz,
+    updated timestamptz,
+    questions_order int[] default('{}') not null
+);
 
 create table questions (
     id serial primary key,
+    survey_id int not null,
     title varchar(255) default('') not null,
     description text default('') not null,
-    options_order int[] default('{}') not null
+    options jsonb default('[]'::json) not null,
+    constraint fk_survey foreign key(survey_id) references surveys(id) on delete cascade
 );
 
-create table options (
-    id serial primary key,
-    question_id int,
-    value varchar(255) default('') not null,
-    constraint fk_question
-        foreign key(question_id) references questions(id) on delete cascade
-);
-
-create index option_question_idx on options (question_id)
+create index question_survey_idx on questions (survey_id);
