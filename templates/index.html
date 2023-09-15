@@ -1,67 +1,83 @@
 {{block "header" .}}
 <!DOCTYPE html>
 <html>
-    <head>
-        <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js"></script>
-        <script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script>
-        <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
-        <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-        <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
-            .contenteditable:not(:focus) {
-                border: none;
-                box-shadow: none;
-            }
-            .option.field:not(:last-child) {
-                margin-bottom: .25rem;
-            }
-            .question-menu {
-                font-size: 1.5em;
-            }
-            .pointer {
-                cursor: pointer;
-            }
-        </style>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
-    <body>
-{{end}}
-        <div class="section">
-            <form class="field" hx-post="/survey" hx-target="tbody" hx-swap="beforeend">
-                <div class="field has-addons">
-                    <div class="control">
-                        <input placeholder="A new Amazing Survey" class="input" name="title">
-                    </div>
-                    <div class="control">
-                        <button class="button is-info">Add</button>
+<head>
+    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script>
+    <script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="htmx-config" content='{"useTemplateFragments":true}'>
+    <style>
+        .contenteditable:not(:focus) {
+            border: none;
+            box-shadow: none;
+        }
+        .option.field:not(:last-child) {
+            margin-bottom: .25rem;
+        }
+        .question-menu {
+            font-size: 1.5em;
+        }
+        .pointer {
+            cursor: pointer;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<nav class="navbar is-link">
+    <div class="container">
+        <div id="navMenu" class="navbar-menu">
+            <div class="navbar-start">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        {{if .LoggedIn}}
+                        <a href="/dashboard" class="button is-link">Go to dashboard</a>
+                        {{end}}
                     </div>
                 </div>
-            </form>
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th>Title</th>
-                        <th>Modified</th>
-                        <th>Created</th>
-                    </tr>
-                    {{range .}}
-                    {{block "surveyItem" .}}
-                    <tr>
-                        <td><a href="/survey?surveyId={{.Id}}">{{.Title}}</a></td>
-                        <td>{{.Created.Format "2. 1. 2006 15:04" }}</td>
-                        <td>{{.Updated.Format "2. 1. 2006 15:04" }}</td>
-                        <td><a hx-delete="/survey?surveyId={{.Id}}" hx-target="closest tr" hx-swap="outerHTML" class="has-text-danger">Delete</a></td>
-                    </tr>
-                    {{end}}
-                    {{end}}
-                </tbody>
-            </table>
+            </div>
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        {{if .LoggedIn}}
+                        <a href="/logout" class="button is-link">Logout</a>
+                        {{else}}
+                        <a href="/login" class="button is-link">Login</a>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+</nav>
+{{end}}
+<section class="hero is-medium is-link">
+    <div class="hero-body">
+        <p class="title">
+            Best survey creator you've ever seen
+        </p>
+        <p class="subtitle">
+            Courtesy of Pavel Flegr
+        </p>
+    </div>
+</section>
+<section class="container section content">
+    <span class="heading">Features</span>
+    <ul>
+        <li>Create an account! Revolutionary, I know</li>
+        <li>Make as many surveys as you like (or even delete them if you're feeling adventurous)</li>
+        <li>You can choose from a GRAND TOTAL of 1 question type - multiple choice. ok you don't really get to choose, it gets selected for you :)</li>
+        <li>Choose the name, (rich text!!) description and options list</li>
+        <li>You even get to reorder them, isn't it marvelous? Oh, and that applies to questions as well, just grab them by the conveniently placed blue bar</li>
+    </ul>
+</section>
 {{block "footer" .}}
-    </body>
+</body>
 </html>
 {{end}}

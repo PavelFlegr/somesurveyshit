@@ -1,0 +1,36 @@
+{{template "header" .}}
+{{with .Data}}
+<div class="section">
+    <form class="field" hx-post="/survey" hx-target="tbody" hx-swap="beforeend">
+        <span id="error"></span>
+        <div class="field has-addons">
+            <div class="control">
+                <input placeholder="A new Amazing Survey" class="input" name="title">
+            </div>
+            <div class="control">
+                <button class="button is-info">Add</button>
+            </div>
+        </div>
+    </form>
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Title</th>
+                <th>Modified</th>
+                <th>Created</th>
+            </tr>
+            {{range .}}
+            {{block "surveyItem" .}}
+            <tr>
+                <td><a href="/survey?surveyId={{.Id}}">{{.Title}}</a></td>
+                <td>{{.Created.Format "2. 1. 2006 15:04" }}</td>
+                <td>{{.Updated.Format "2. 1. 2006 15:04" }}</td>
+                <td><a hx-delete="/survey?surveyId={{.Id}}" hx-target="closest tr" hx-swap="outerHTML" class="has-text-danger">Delete</a></td>
+            </tr>
+            {{end}}
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+{{template "footer" .}}

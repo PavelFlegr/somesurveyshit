@@ -1,4 +1,5 @@
 {{template "header" .}}
+{{with .Data}}
 {{block "survey" .}}
 <script>
     htmx.onLoad((el) => {
@@ -30,10 +31,10 @@
             {{block "survey-title" .}}
             <div class="level-item level-left">
                 <h1 class="title">
-                    <span hx-get="/survey/title/edit?surveyId={{.Id}}" hx-target="closest div" hx-swap="outerHTML" class="icon is-small is-clickable">
-                        <span class="mdi mdi-file-edit is-size-4"></span>
-                    </span>
                     <span>Survey {{.Title}}</span>
+                    <span hx-get="/survey/title/edit?surveyId={{.Id}}" hx-target="closest div" hx-swap="outerHTML" class="icon is-small is-clickable">
+                        <span class="mdi mdi-pencil is-size-4"></span>
+                    </span>
                 </h1>
             </div>
             {{end}}
@@ -59,5 +60,6 @@
         {{end}}
     </form>
 </div>
+{{end}}
 {{end}}
 {{template "footer" .}}

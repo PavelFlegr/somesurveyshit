@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func ListSurveys() []Survey {
-	rows, err := context.Ctx.Db.Query("select id, title, created, updated from surveys")
+func ListSurveys(userId int64) []Survey {
+	rows, err := context.Ctx.Db.Query("select id, title, created, updated from surveys where user_id = $1", userId)
 	if err != nil {
 		log.Panic("Couldn't list surveys", err)
 	}
@@ -25,13 +25,13 @@ func ListSurveys() []Survey {
 	return surveys
 }
 
-func GetSurvey(surveyId int64) Survey {
+func GetSurvey(surveyId int64, userId int64) Survey {
 	var survey Survey
 	survey.Id = surveyId
 	var created string
 	var updated string
 	var questionsOrder []int64
-	err := context.Ctx.Db.QueryRow("select title, created, updated, questions_order from surveys where id = $1", surveyId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&questionsOrder))
+	err := context.Ctx.Db.QueryRow("select title, created, updated, questions_order from surveys where id = $1 and user_id = $2", surveyId, userId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&questionsOrder))
 	if err != nil {
 		log.Print("Couldn't get survey", err)
 	}
@@ -42,7 +42,7 @@ func GetSurvey(surveyId int64) Survey {
 	survey.Updated = updatedTime
 
 	tmp := make(map[int64]Question)
-	survey.Questions = ListQuestions(surveyId)
+	survey.Questions = ListQuestions(surveyId, userId)
 	for _, v := range survey.Questions {
 		tmp[v.Id] = v
 	}
@@ -53,10 +53,10 @@ func GetSurvey(surveyId int64) Survey {
 	return survey
 }
 
-func CreateSurvey(title string) Survey {
+func CreateSurvey(title string, userId int64) Survey {
 	var survey Survey
 	survey.Title = title
-	err := context.Ctx.Db.QueryRow("insert into surveys (title, created, updated) values ($1, now(), now()) returning id, created, updated", title).Scan(&survey.Id, &survey.Created, &survey.Updated)
+	err := context.Ctx.Db.QueryRow("insert into surveys (title, created, updated, user_id) values ($1, now(), now(), $2) returning id, created, updated", title, userId).Scan(&survey.Id, &survey.Created, &survey.Updated)
 	if err != nil {
 		log.Print("Couldn't create survey", err)
 	}
@@ -64,20 +64,20 @@ func CreateSurvey(title string) Survey {
 	return survey
 }
 
-func RenameSurvey(surveyId int64, title string) {
-	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), title = $1 where id = $2", title, surveyId)
+func RenameSurvey(surveyId int64, title string, userId int64) {
+	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), title = $1 where id = $2 and user_id = $3", title, surveyId, userId)
 	if err != nil {
 		log.Print("Couldn't update survey title", err)
 	}
 }
 
-func DeleteSurvey(surveyId int64) {
-	_, err := context.Ctx.Db.Exec("delete from surveys where id = $1", surveyId)
+func DeleteSurvey(surveyId int64, userId int64) {
+	_, err := context.Ctx.Db.Exec("delete from surveys where id = $1 and user_id = $2", surveyId, userId)
 	if err != nil {
 		log.Print("Couldn't delete survey", err)
 	}
 }
 
-func ReorderSurvey(surveyId int64, questionsOrder []int64) {
-	context.Ctx.Db.Exec("update surveys set updated = now(), questions_order = $1 where id = $2", pq.Array(questionsOrder), surveyId)
+func ReorderSurvey(surveyId int64, questionsOrder []int64, userId int64) {
+	context.Ctx.Db.Exec("update surveys set updated = now(), questions_order = $1 where id = $2 and user_id = $3", pq.Array(questionsOrder), surveyId, userId)
 }

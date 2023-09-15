@@ -7,6 +7,17 @@ import (
 	"time"
 )
 
+type TemplateData struct {
+	LoggedIn bool
+	Data     interface{}
+}
+
+type User struct {
+	Id       int64
+	Email    string
+	Password string
+}
+
 type Survey struct {
 	Id        int64
 	Title     string
