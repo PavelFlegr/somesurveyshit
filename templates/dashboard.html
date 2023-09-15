@@ -1,5 +1,5 @@
 {{template "header" .}}
-{{with .Data}}
+{{block "dashboard" .Data}}
 <div class="section">
     <form class="field" hx-post="/survey" hx-target="tbody" hx-swap="beforeend">
         <span id="error"></span>
