@@ -8,7 +8,7 @@ import (
 )
 
 func ListSurveys(userId int64) []Survey {
-	rows, err := context.Ctx.Db.Query("select id, title, created, updated from surveys where user_id = $1", userId)
+	rows, err := context.Ctx.Db.Query("select id, title, created, updated from surveys inner join public.survey_permissions sp on surveys.id = sp.entity_id where sp.user_id = $1 and sp.action = 'read'", userId)
 	if err != nil {
 		log.Panic("Couldn't list surveys", err)
 	}
@@ -42,7 +42,7 @@ func GetSurvey(surveyId int64, userId int64) Survey {
 	survey.Updated = updatedTime
 
 	tmp := make(map[int64]Question)
-	survey.Questions = ListQuestions(surveyId, userId)
+	survey.Questions = ListQuestions(surveyId)
 	for _, v := range survey.Questions {
 		tmp[v.Id] = v
 	}
@@ -61,11 +61,15 @@ func CreateSurvey(title string, userId int64) Survey {
 		log.Print("Couldn't create survey", err)
 	}
 
+	AddPermission(userId, "survey", survey.Id, "manage")
+	AddPermission(userId, "survey", survey.Id, "edit")
+	AddPermission(userId, "survey", survey.Id, "read")
+
 	return survey
 }
 
-func RenameSurvey(surveyId int64, title string, userId int64) {
-	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), title = $1 where id = $2 and user_id = $3", title, surveyId, userId)
+func RenameSurvey(surveyId int64, title string) {
+	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), title = $1 where id = $2", title, surveyId)
 	if err != nil {
 		log.Print("Couldn't update survey title", err)
 	}

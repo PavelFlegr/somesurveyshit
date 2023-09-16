@@ -1,6 +1,8 @@
 drop table if exists users cascade;
 drop table if exists surveys cascade;
 drop table if exists questions cascade;
+drop table if exists survey_permissions cascade;
+drop table if exists question_permissions cascade;
 
 create table users (
     id serial primary key,
@@ -30,3 +32,21 @@ create table questions (
 );
 
 create index question_survey_idx on questions (survey_id);
+
+create table survey_permissions (
+    user_id int not null,
+    action varchar(255) not null,
+    entity_id int not null,
+    constraint fk_user foreign key(user_id) references users(id) on delete cascade,
+    constraint fk_survey foreign key(entity_id) references surveys(id) on delete cascade,
+    primary key (user_id, action, entity_id)
+);
+
+create table question_permissions (
+    user_id int not null,
+    action varchar(255) not null,
+    entity_id int not null,
+    constraint fk_user foreign key(user_id) references users(id) on delete cascade,
+    constraint fk_question foreign key(entity_id) references questions(id) on delete cascade,
+    primary key (user_id, action, entity_id)
+);

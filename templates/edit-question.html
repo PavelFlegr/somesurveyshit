@@ -13,7 +13,7 @@
                 {{end}}
             </div>
             <div class="level-item level-right">
-                <button class="button mr-2 is-inverted" hx-get="/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Cancel</button>
+                <button class="button mr-2 is-inverted" hx-params="none" hx-get="/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Cancel</button>
                 <button hx-indicator="previous .question-loader" class="button is-primary">Save</button>
             </div>
         </div>

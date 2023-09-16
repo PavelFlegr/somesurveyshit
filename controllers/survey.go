@@ -30,6 +30,10 @@ func Survey(template *template.Template) {
 		}
 		if r.Method == "GET" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			survey := services.GetSurvey(surveyId, userId)
 			if r.Header.Get("Hx-Request") == "true" {
 				template.ExecuteTemplate(w, "survey", survey)
@@ -52,6 +56,10 @@ func Survey(template *template.Template) {
 		}
 		if r.Method == "DELETE" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			services.DeleteSurvey(surveyId, userId)
 		}
 	})
@@ -64,13 +72,21 @@ func Survey(template *template.Template) {
 		}
 		if r.Method == "GET" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			survey := services.GetSurvey(surveyId, userId)
 			template.ExecuteTemplate(w, "navigation", survey)
 		}
 		if r.Method == "PUT" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			title := r.PostFormValue("title")
-			services.RenameSurvey(surveyId, title, userId)
+			services.RenameSurvey(surveyId, title)
 
 			template.ExecuteTemplate(w, "navigation", services.Survey{Id: surveyId, Title: title})
 		}
@@ -84,6 +100,10 @@ func Survey(template *template.Template) {
 		}
 		if r.Method == "GET" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			survey := services.GetSurvey(surveyId, userId)
 			template.ExecuteTemplate(w, "edit-survey-title", survey)
 		}
@@ -98,6 +118,10 @@ func Survey(template *template.Template) {
 		if r.Method == "PUT" {
 			r.ParseForm()
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			var questionsOrder []int64
 			for _, question := range r.PostForm["question"] {
 				id, _ := strconv.ParseInt(question, 10, 0)
@@ -114,14 +138,32 @@ func Survey(template *template.Template) {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
+		if r.Method == "GET" {
+			questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
+			if !services.HasPermission(userId, "question", questionId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			question := services.GetQuestion(questionId)
+
+			template.ExecuteTemplate(w, "question.html", question)
+		}
 		if r.Method == "POST" {
 			surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			question := services.CreateQuestion(surveyId, userId)
 
 			template.ExecuteTemplate(w, "questions", []services.Question{question})
 		}
 		if r.Method == "PUT" {
 			questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
+			if !services.HasPermission(userId, "question", questionId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			title := r.FormValue("title")
 			description := r.FormValue("description")
 			var options []services.Option
@@ -134,13 +176,17 @@ func Survey(template *template.Template) {
 				Description: description,
 				Options:     options,
 			}
-			services.UpdateQuestion(question, userId)
+			services.UpdateQuestion(question)
 
 			template.ExecuteTemplate(w, "question.html", question)
 		}
 		if r.Method == "DELETE" {
 			questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
-			services.DeleteQuestion(questionId, userId)
+			if !services.HasPermission(userId, "question", questionId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			services.DeleteQuestion(questionId)
 		}
 	})
 
@@ -152,7 +198,11 @@ func Survey(template *template.Template) {
 		}
 		if r.Method == "GET" {
 			questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
-			question := services.GetQuestion(questionId, userId)
+			if !services.HasPermission(userId, "question", questionId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			question := services.GetQuestion(questionId)
 
 			template.ExecuteTemplate(w, "edit-question.html", question)
 		}
