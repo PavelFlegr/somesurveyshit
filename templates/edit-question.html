@@ -23,9 +23,9 @@
             {{range $option := .Options}}
             {{block "option" .}}
             <div class="field has-addons option">
-        <span class="icon is-medium drag-handle is-clickable">
-            <i class="mdi mdi-drag-vertical-variant"></i>
-        </span>
+                <span class="icon is-medium drag-handle is-clickable">
+                    <i class="mdi mdi-drag-vertical-variant"></i>
+                </span>
                 <div class="control">
                     <input placeholder="An Amazing option" class="input is-small" name="option" value="{{.Label}}">
                 </div>

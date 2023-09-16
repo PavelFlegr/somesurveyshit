@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"html/template"
+	"log"
 	"main/context"
 	"main/services"
 	"net/http"
@@ -38,10 +39,13 @@ func Survey(template *template.Template) {
 			if r.Header.Get("Hx-Request") == "true" {
 				template.ExecuteTemplate(w, "survey", survey)
 			} else {
-				template.ExecuteTemplate(w, "survey.html", services.TemplateData{
+				err := template.ExecuteTemplate(w, "survey.html", services.TemplateData{
 					LoggedIn: authErr == nil,
 					Data:     survey,
 				})
+				if err != nil {
+					log.Println("GET /survey", err)
+				}
 			}
 		}
 		if r.Method == "POST" {
