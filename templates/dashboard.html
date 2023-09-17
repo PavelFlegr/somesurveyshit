@@ -22,12 +22,12 @@
             {{range .}}
             {{block "surveyItem" .}}
             <tr>
-                <td><a href="/manage/survey?surveyId={{.Id}}">{{.Title}}</a></td>
+                <td><a href="/manage/survey/{{.Id}}">{{.Title}}</a></td>
                 <td>{{.Created.Format "2. 1. 2006 15:04" }}</td>
                 <td>{{.Updated.Format "2. 1. 2006 15:04" }}</td>
-                <td><a target="_blank" href="/survey?surveyId={{.Id}}">Public link</a></td>
-                <td><a href="/manage/survey/download?surveyId={{.Id}}" download="survey{{.Id}}.csv">Download data</a></td>
-                <td><a hx-delete="/manage/survey?surveyId={{.Id}}" hx-target="closest tr" hx-swap="outerHTML" class="has-text-danger">Delete</a></td>
+                <td><a target="_blank" href="/survey/{{.Id}}">Public link</a></td>
+                <td><a href="/manage/survey/{{.Id}}/download" download="survey{{.Id}}.csv">Download data</a></td>
+                <td><a hx-delete="/manage/survey/{{.Id}}" hx-target="closest tr" hx-swap="outerHTML" class="has-text-danger">Delete</a></td>
             </tr>
             {{end}}
             {{end}}

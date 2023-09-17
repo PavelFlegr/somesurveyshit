@@ -26,31 +26,6 @@ func Manage(template *template.Template, r chi.Router) {
 		})
 	})
 
-	r.Get("/manage/survey", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
-		if !services.HasPermission(userId, "survey", surveyId, "read") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		survey := services.GetSurvey(surveyId)
-		if r.Header.Get("Hx-Request") == "true" {
-			template.ExecuteTemplate(w, "survey", survey)
-		} else {
-			err := template.ExecuteTemplate(w, "survey.html", services.TemplateData{
-				LoggedIn: authErr == nil,
-				Data:     survey,
-			})
-			if err != nil {
-				log.Println("GET /survey", err)
-			}
-		}
-	})
-
 	r.Post("/manage/survey", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
@@ -68,62 +43,90 @@ func Manage(template *template.Template, r chi.Router) {
 		template.ExecuteTemplate(w, "noerror", nil)
 	})
 
-	r.Delete("/manage/survey", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
-		if !services.HasPermission(userId, "survey", surveyId, "edit") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		services.DeleteSurvey(surveyId, userId)
+	r.Route("/manage/survey/{surveyId}", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			survey := services.GetSurvey(surveyId)
+			if r.Header.Get("Hx-Request") == "true" {
+				template.ExecuteTemplate(w, "survey", survey)
+			} else {
+				err := template.ExecuteTemplate(w, "survey.html", services.TemplateData{
+					LoggedIn: authErr == nil,
+					Data:     survey,
+				})
+				if err != nil {
+					log.Println("GET /survey", err)
+				}
+			}
+		})
+		r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			services.DeleteSurvey(surveyId, userId)
+		})
 	})
 
-	r.Get("/manage/survey/title", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
+	r.Route("/manage/survey/{surveyId}/title", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
 
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
-		if !services.HasPermission(userId, "survey", surveyId, "read") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		survey := services.GetSurvey(surveyId)
-		template.ExecuteTemplate(w, "navigation", survey)
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			survey := services.GetSurvey(surveyId)
+			template.ExecuteTemplate(w, "navigation", survey)
+		})
+
+		r.Put("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			title := r.PostFormValue("title")
+			services.RenameSurvey(surveyId, title)
+
+			template.ExecuteTemplate(w, "navigation", services.Survey{Id: surveyId, Title: title})
+		})
 	})
 
-	r.Put("/manage/survey/title", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/manage/survey/{surveyId}/title/edit", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
-		if !services.HasPermission(userId, "survey", surveyId, "edit") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		title := r.PostFormValue("title")
-		services.RenameSurvey(surveyId, title)
-
-		template.ExecuteTemplate(w, "navigation", services.Survey{Id: surveyId, Title: title})
-	})
-
-	r.Get("/manage/survey/title/edit", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 		if !services.HasPermission(userId, "survey", surveyId, "read") {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -132,7 +135,7 @@ func Manage(template *template.Template, r chi.Router) {
 		template.ExecuteTemplate(w, "edit-survey-title", survey)
 	})
 
-	r.Put("/manage/survey/reorder", func(w http.ResponseWriter, r *http.Request) {
+	r.Put("/manage/survey/{surveyId}/reorder", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -140,7 +143,7 @@ func Manage(template *template.Template, r chi.Router) {
 		}
 
 		r.ParseForm()
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 		if !services.HasPermission(userId, "survey", surveyId, "edit") {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -154,31 +157,14 @@ func Manage(template *template.Template, r chi.Router) {
 		services.ReorderSurvey(surveyId, questionsOrder, userId)
 	})
 
-	r.Get("/manage/question", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/manage/survey/{surveyId}/question", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
-		questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
-		if !services.HasPermission(userId, "question", questionId, "read") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		question := services.GetQuestion(questionId)
-
-		template.ExecuteTemplate(w, "question.html", question)
-	})
-
-	r.Post("/manage/question", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 		if !services.HasPermission(userId, "survey", surveyId, "edit") {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -188,58 +174,77 @@ func Manage(template *template.Template, r chi.Router) {
 		template.ExecuteTemplate(w, "questions", []services.Question{question})
 	})
 
-	r.Put("/manage/question", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
+	r.Route("/manage/survey/{surveyId}/question/{questionId}", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
 
-		questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
-		if !services.HasPermission(userId, "question", questionId, "edit") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		title := r.FormValue("title")
-		description := r.FormValue("description")
-		var options []services.Option
-		for _, option := range r.PostForm["option"] {
-			options = append(options, services.Option{Label: option})
-		}
-		question := services.Question{
-			Id:          questionId,
-			Title:       title,
-			Description: description,
-			Options:     options,
-		}
-		services.UpdateQuestion(question)
+			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
+			if !services.HasPermission(userId, "question", questionId, "read") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			question := services.GetQuestion(questionId)
 
-		template.ExecuteTemplate(w, "question.html", question)
+			template.ExecuteTemplate(w, "question.html", question)
+		})
+
+		r.Put("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
+			if !services.HasPermission(userId, "question", questionId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			title := r.FormValue("title")
+			description := r.FormValue("description")
+			var options []services.Option
+			for _, option := range r.PostForm["option"] {
+				options = append(options, services.Option{Label: option})
+			}
+			question := services.Question{
+				Id:          questionId,
+				Title:       title,
+				Description: description,
+				Options:     options,
+			}
+			services.UpdateQuestion(question)
+
+			template.ExecuteTemplate(w, "question.html", question)
+		})
+
+		r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
+			userId, authErr := context.CheckAuth(r)
+			if authErr != nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
+			if !services.HasPermission(userId, "question", questionId, "edit") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			services.DeleteQuestion(questionId)
+		})
 	})
 
-	r.Delete("/manage/question", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/manage/surveyId/{surveyId}/question/{questionId}/edit", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
-		questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
-		if !services.HasPermission(userId, "question", questionId, "edit") {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		services.DeleteQuestion(questionId)
-	})
-
-	r.Get("/manage/question/edit", func(w http.ResponseWriter, r *http.Request) {
-		userId, authErr := context.CheckAuth(r)
-		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		questionId, _ := strconv.ParseInt(r.URL.Query().Get("questionId"), 10, 0)
+		questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
 		if !services.HasPermission(userId, "question", questionId, "read") {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -254,8 +259,8 @@ func Manage(template *template.Template, r chi.Router) {
 		template.ExecuteTemplate(w, "option", option)
 	})
 
-	r.Get("/manage/survey/download", func(w http.ResponseWriter, r *http.Request) {
-		surveyId, _ := strconv.ParseInt(r.URL.Query().Get("surveyId"), 10, 0)
+	r.Get("/manage/survey/{surveyId}/download", func(w http.ResponseWriter, r *http.Request) {
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
 
 		rows, err := context.Ctx.Db.Query("select response from responses where survey_id = $1", surveyId)
 		if err != nil {

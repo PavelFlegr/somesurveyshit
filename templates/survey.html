@@ -27,7 +27,7 @@
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/manage/dashboard">Surveys</a></li>
-                <li class="is-active"><a href="/manage/survey?surveyId={{.Id}}" aria-current="page">{{.Title}}</a></li>
+                <li class="is-active"><a href="/manage/survey/{{.Id}}" aria-current="page">{{.Title}}</a></li>
             </ul>
         </nav>
         <div class="level">
@@ -35,14 +35,14 @@
             <div class="level-item level-left">
                 <h1 class="title">
                     <span>Survey {{.Title}}</span>
-                    <span hx-get="/manage/survey/title/edit?surveyId={{.Id}}" hx-target="closest div" hx-swap="outerHTML" class="icon is-small is-clickable">
+                    <span hx-get="/manage/survey/{{.Id}}/title/edit" hx-target="closest div" hx-swap="outerHTML" class="icon is-small is-clickable">
                         <span class="mdi mdi-pencil is-size-4"></span>
                     </span>
                 </h1>
             </div>
             {{end}}
             <div class="level-item level-right">
-                <button class="button is-primary level-item level-right" hx-post="/manage/question?surveyId={{.Id}}" hx-target="#questions" hx-swap="beforeend">
+                <button class="button is-primary level-item level-right" hx-post="/manage/survey/{{.Id}}/question" hx-target="#questions" hx-swap="beforeend">
                     <span class="icon">
                         <span class="mdi mdi-plus"></span>
                     </span>
@@ -52,7 +52,7 @@
         </div>
     </div>
     {{end}}
-    <form hx-put="/manage/survey/reorder?surveyId={{.Id}}" hx-trigger="reorder" hx-swap="none" id="questions">
+    <form hx-put="/manage/survey/{{.Id}}/reorder" hx-trigger="reorder" hx-swap="none" id="questions">
         {{block "questions" .Questions}}
         {{range $i, $question := .}}
         <div class="block question-container">

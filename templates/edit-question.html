@@ -1,5 +1,5 @@
 <div class="box question">
-    <form hx-put="/manage/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML" hx-vals="js:description:htmx.find(htmx.find('#editor{{.Id}}'), '.ql-editor').innerHTML">
+    <form hx-put="/manage/survey/{{.SurveyId}}/question/{{.Id}}" hx-target="closest .question" hx-swap="outerHTML" hx-vals="js:description:htmx.find(htmx.find('#editor{{.Id}}'), '.ql-editor').innerHTML">
         <progress class="progress is-small is-primary htmx-indicator question-loader m-0" max="100">15%</progress>
         <div class="level">
             <div class="level-item level-left">
@@ -13,7 +13,7 @@
                 {{end}}
             </div>
             <div class="level-item level-right">
-                <button class="button mr-2 is-inverted" hx-params="none" hx-get="/manage/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Cancel</button>
+                <button class="button mr-2 is-inverted" hx-params="none" hx-get="/manage/survey/{{.SurveyId}}/question?questionId={{.Id}}" hx-target="closest .question" hx-swap="outerHTML">Cancel</button>
                 <button hx-indicator="previous .question-loader" class="button is-primary">Save</button>
             </div>
         </div>
