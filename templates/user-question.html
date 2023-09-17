@@ -1,0 +1,19 @@
+<div class="question">
+    <div class="has-background-info pb-3 is-clickable drag-handle"></div>
+    <div class="box">
+        <div class="level">
+            <div class="level-item level-left">
+                <div class="title">{{.Title}}</div>
+            </div>
+        </div>
+        <div class="content">{{ unescape .Description }}</div>
+        {{range $i, $option := .Options}}
+        <div>
+            <label class="radio is-unselectable">
+                <input type="radio" name="{{$.Id}}" value="{{$i}}">
+                {{$option.Label}}
+            </label>
+        </div>
+        {{end}}
+    </div>
+</div>

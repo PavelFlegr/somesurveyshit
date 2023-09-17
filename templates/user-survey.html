@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    </head>
+    <body>
+        <form action="/survey?surveyId={{.Id}}" method="post" class="section container">
+            {{range $i, $question := .Questions}}
+            <div class="block question-container">
+                {{template "user-question.html" $question}}
+            </div>
+            {{end}}
+            <button class="button is-primary">Submit</button>
+        </form>
+    </body>
+</html>

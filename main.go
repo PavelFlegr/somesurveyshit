@@ -79,7 +79,7 @@ func main() {
 				SameSite: http.SameSiteStrictMode},
 			)
 
-			w.Header().Set("HX-Redirect", "/dashboard")
+			w.Header().Set("HX-Redirect", "/manage/dashboard")
 		}
 	})
 
@@ -132,7 +132,12 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/goodbye", func(w http.ResponseWriter, r *http.Request) {
+		indexTmpl.ExecuteTemplate(w, "goodbye.html", nil)
+	})
+
 	controllers.Survey(indexTmpl)
+	controllers.Manage(indexTmpl)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 }
