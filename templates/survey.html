@@ -5,7 +5,7 @@
     htmx.onLoad((el) => {
         for (let editor of el.getElementsByClassName('editor')) {
             new Quill(editor, {
-                theme: 'snow'
+                theme: 'snow',
             })
         }
         for (let options of el.getElementsByClassName('options')) {
@@ -14,7 +14,10 @@
             })
         }
         Sortable.create(document.getElementById('questions'), {
-            handle: '.drag-handle'
+            handle: '.drag-handle',
+            onEnd: (e) => {
+                htmx.trigger("#questions", "reorder")
+            }
         })
     })
 </script>
@@ -49,7 +52,7 @@
         </div>
     </div>
     {{end}}
-    <form hx-put="/manage/survey/reorder?surveyId={{.Id}}" hx-trigger="end" hx-swap="none" id="questions">
+    <form hx-put="/manage/survey/reorder?surveyId={{.Id}}" hx-trigger="reorder" hx-swap="none" id="questions">
         {{block "questions" .Questions}}
         {{range $i, $question := .}}
         <div class="block question-container">
