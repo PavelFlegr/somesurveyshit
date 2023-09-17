@@ -6,7 +6,7 @@ import (
 )
 
 func ListQuestions(surveyId int64) []Question {
-	rows, err := context.Ctx.Db.Query("select id, description, title, options from questions where survey_id = $1", surveyId)
+	rows, err := context.Ctx.Db.Query("select id, description, title, options, survey_id from questions where survey_id = $1", surveyId)
 	defer rows.Close()
 	if err != nil {
 		log.Print("ListQuestions", err)
@@ -15,17 +15,18 @@ func ListQuestions(surveyId int64) []Question {
 	var questions []Question
 	for rows.Next() {
 		var question Question
-		rows.Scan(&question.Id, &question.Description, &question.Title, &question.Options)
+		rows.Scan(&question.Id, &question.Description, &question.Title, &question.Options, &question.SurveyId)
 		questions = append(questions, question)
 	}
 
 	return questions
 }
 
-func GetQuestion(questionId int64) Question {
+func GetQuestion(surveyId int64, questionId int64) Question {
 	var question Question
 	question.Id = questionId
-	err := context.Ctx.Db.QueryRow("select description, title, options from questions where id = $1", questionId).Scan(&question.Description, &question.Title, &question.Options)
+	question.SurveyId = surveyId
+	err := context.Ctx.Db.QueryRow("select description, title, options from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&question.Description, &question.Title, &question.Options)
 	if err != nil {
 		log.Print("GetQuestion", err)
 	}
@@ -36,6 +37,7 @@ func GetQuestion(questionId int64) Question {
 func CreateQuestion(surveyId int64, userId int64) Question {
 	var question Question
 	question.Title = "New Question"
+	question.SurveyId = surveyId
 	row := context.Ctx.Db.QueryRow("insert into questions (survey_id, title, user_id) values ($1, $2, $3) returning id", surveyId, question.Title, userId)
 	err := row.Scan(&question.Id)
 	if err != nil {
@@ -43,25 +45,19 @@ func CreateQuestion(surveyId int64, userId int64) Question {
 	}
 	context.Ctx.Db.Exec("update surveys set updated = now(), questions_order = array_append(questions_order, $1) where id = $2", question.Id, surveyId)
 
-	AddPermission(userId, "question", question.Id, "manage")
-	AddPermission(userId, "question", question.Id, "edit")
-	AddPermission(userId, "question", question.Id, "read")
-
 	return question
 }
 
-func UpdateQuestion(question Question) {
-	var surveyId int64
-	err := context.Ctx.Db.QueryRow("update questions set title = $1, description = $2, options = $3 where id = $4 returning survey_id", question.Title, question.Description, question.Options, question.Id).Scan(&surveyId)
+func UpdateQuestion(surveyId int64, question Question) {
+	_, err := context.Ctx.Db.Exec("update questions set title = $1, description = $2, options = $3 where id = $4 and survey_id = $5", question.Title, question.Description, question.Options, question.Id, surveyId)
 	if err != nil {
 		log.Println("UpdateQuestion", err)
 	}
 	context.Ctx.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
 }
 
-func DeleteQuestion(questionId int64) {
-	var surveyId int64
-	err := context.Ctx.Db.QueryRow("delete from questions where id = $1 returning survey_id", questionId).Scan(&surveyId)
+func DeleteQuestion(surveyId int64, questionId int64) {
+	_, err := context.Ctx.Db.Exec("delete from questions where id = $1 and survey_id = $2", questionId, surveyId)
 	if err != nil {
 		log.Println("DeleteQuestion", err)
 	}

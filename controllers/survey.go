@@ -27,7 +27,7 @@ func Survey(template *template.Template, r chi.Router) {
 			response := services.Response{}
 			for k, v := range r.PostForm {
 				questionId, _ := strconv.ParseInt(k, 10, 0)
-				question := services.GetQuestion(questionId)
+				question := services.GetQuestion(surveyId, questionId)
 				answerIndex, _ := strconv.ParseInt(v[0], 10, 0)
 				response[k] = question.Options[answerIndex].Label
 			}

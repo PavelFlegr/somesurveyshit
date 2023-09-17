@@ -183,11 +183,12 @@ func Manage(template *template.Template, r chi.Router) {
 			}
 
 			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
-			if !services.HasPermission(userId, "question", questionId, "read") {
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "read") {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
-			question := services.GetQuestion(questionId)
+			question := services.GetQuestion(surveyId, questionId)
 
 			template.ExecuteTemplate(w, "question.html", question)
 		})
@@ -200,7 +201,8 @@ func Manage(template *template.Template, r chi.Router) {
 			}
 
 			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
-			if !services.HasPermission(userId, "question", questionId, "edit") {
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
@@ -215,8 +217,9 @@ func Manage(template *template.Template, r chi.Router) {
 				Title:       title,
 				Description: description,
 				Options:     options,
+				SurveyId:    surveyId,
 			}
-			services.UpdateQuestion(question)
+			services.UpdateQuestion(surveyId, question)
 
 			template.ExecuteTemplate(w, "question.html", question)
 		})
@@ -229,11 +232,12 @@ func Manage(template *template.Template, r chi.Router) {
 			}
 
 			questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
-			if !services.HasPermission(userId, "question", questionId, "edit") {
+			surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+			if !services.HasPermission(userId, "survey", surveyId, "edit") {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
-			services.DeleteQuestion(questionId)
+			services.DeleteQuestion(surveyId, questionId)
 		})
 	})
 
@@ -245,11 +249,12 @@ func Manage(template *template.Template, r chi.Router) {
 		}
 
 		questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
-		if !services.HasPermission(userId, "question", questionId, "read") {
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "read") {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		question := services.GetQuestion(questionId)
+		question := services.GetQuestion(surveyId, questionId)
 
 		template.ExecuteTemplate(w, "edit-question.html", question)
 	})

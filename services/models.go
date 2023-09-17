@@ -30,6 +30,7 @@ type Question struct {
 	Id          int64
 	Title       string
 	Description string
+	SurveyId    int64
 	Options     OptionsSlice
 }
 
