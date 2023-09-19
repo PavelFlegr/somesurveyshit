@@ -12,18 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta name="htmx-config" content='{"useTemplateFragments":true}'>
     <style>
-        .contenteditable:not(:focus) {
-            border: none;
-            box-shadow: none;
-        }
         .option.field:not(:last-child) {
             margin-bottom: .25rem;
         }
-        .question-menu {
-            font-size: 1.5em;
-        }
-        .pointer {
-            cursor: pointer;
+        .collapsed {
+            display: none;
         }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -67,6 +60,7 @@
     </div>
 </section>
 <section class="container section content">
+    {{template "block.html" .}}
     <span class="heading">Features</span>
     <ul>
         <li>Create an account! Revolutionary, I know</li>

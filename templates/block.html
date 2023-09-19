@@ -1,0 +1,27 @@
+<div class="block">
+    <div class="card" _="on collapse toggle .collapsed on .card-content in me">
+        <header class="card-header">
+            <span class="card-header-title">{{.Title}}</span>
+            <button _="on click trigger collapse on closest .card" class="card-header-icon">
+            <span class="icon">
+                <i class="mdi mdi-chevron-down"></i>
+            </span>
+            </button>
+        </header>
+        <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="beforeend" hx-target="find .questions" class="card-content collapsed">
+            <button class="button is-primary level-item level-right"  hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-target="next .questions" hx-swap="beforeend">
+                    <span class="icon">
+                        <span class="mdi mdi-plus"></span>
+                    </span>
+                <span>Add new question</span>
+            </button>
+            <div class="questions" data-blockid="{{.Id}}">
+                {{define "questions"}}
+                {{range $i, $question := .}}
+                    {{template "question.html" $question}}
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>

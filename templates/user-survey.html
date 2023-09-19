@@ -5,8 +5,9 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
     </head>
     <body>
-        <form action="/survey?surveyId={{.Id}}" method="post" class="section container">
-            {{range $i, $question := .Questions}}
+        <form action="/survey/{{.Survey.Id}}?page={{.Page}}" method="post" class="section container">
+            <input type="hidden" name="responseId" value="{{.ResponseId}}">
+            {{range $i, $question := .Block.Questions}}
             <div class="block question-container">
                 {{template "user-question.html" $question}}
             </div>

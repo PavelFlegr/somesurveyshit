@@ -38,6 +38,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.SetFlags(log.Lshortfile | log.Ltime | log.Ldate | log.Lmsgprefix)
+
 	r := chi.NewRouter()
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, authErr := context.CheckAuth(r)

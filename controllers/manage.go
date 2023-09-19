@@ -64,7 +64,7 @@ func Manage(template *template.Template, r chi.Router) {
 					Data:     survey,
 				})
 				if err != nil {
-					log.Println("GET /survey", err)
+					log.Println(err)
 				}
 			}
 		})
@@ -157,10 +157,65 @@ func Manage(template *template.Template, r chi.Router) {
 		services.ReorderSurvey(surveyId, questionsOrder, userId)
 	})
 
-	r.Post("/manage/survey/{surveyId}/question", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/manage/survey/{surveyId}/question/{questionId}/reorder", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		questionId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
+		blockId, _ := strconv.ParseInt(r.PostFormValue("blockId"), 10, 0)
+		index, _ := strconv.Atoi(r.PostFormValue("index"))
+		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		services.ReorderQuestion(surveyId, questionId, blockId, index)
+		question := services.GetQuestion(surveyId, questionId)
+
+		err := template.ExecuteTemplate(w, "question.html", question)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/question", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		survey, err := services.GetBlock(blockId, surveyId)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = template.ExecuteTemplate(w, "questions", survey.Questions)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Post("/manage/survey/{surveyId}/block", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
@@ -169,9 +224,44 @@ func Manage(template *template.Template, r chi.Router) {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		question := services.CreateQuestion(surveyId, userId)
+		block := services.Block{
+			Title:    "New Block",
+			SurveyId: surveyId,
+		}
+		err := services.CreateBlock(&block, userId)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-		template.ExecuteTemplate(w, "questions", []services.Question{question})
+		err = template.ExecuteTemplate(w, "block", block)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
+
+	r.Post("/manage/survey/{surveyId}/block/{blockId}/question", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		question := services.CreateQuestion(surveyId, userId, blockId)
+
+		err := template.ExecuteTemplate(w, "question.html", question)
+		if err != nil {
+			log.Println(err)
+		}
 	})
 
 	r.Route("/manage/survey/{surveyId}/question/{questionId}", func(r chi.Router) {
@@ -241,7 +331,7 @@ func Manage(template *template.Template, r chi.Router) {
 		})
 	})
 
-	r.Get("/manage/surveyId/{surveyId}/question/{questionId}/edit", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/manage/survey/{surveyId}/question/{questionId}/edit", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -265,20 +355,21 @@ func Manage(template *template.Template, r chi.Router) {
 	})
 
 	r.Get("/manage/survey/{surveyId}/download", func(w http.ResponseWriter, r *http.Request) {
-		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "questionId"), 10, 0)
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 
 		rows, err := context.Ctx.Db.Query("select response from responses where survey_id = $1", surveyId)
 		if err != nil {
 			log.Println("manage survey download", err)
 		}
 
-		survey := services.GetSurvey(surveyId)
+		var questions []services.Question
+		questions, err = services.ListQuestionsBySurvey(surveyId)
 		var questionIds []string
 
 		csvWriter := csv.NewWriter(w)
 
 		var record []string
-		for _, question := range survey.Questions {
+		for _, question := range questions {
 			questionIds = append(questionIds, strconv.FormatInt(question.Id, 10))
 			record = append(record, question.Title)
 		}

@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type Entity interface {
+	getId() int64
+}
+
 type TemplateData struct {
 	LoggedIn bool
 	Data     interface{}
@@ -19,11 +23,18 @@ type User struct {
 }
 
 type Survey struct {
+	Id      int64
+	Title   string
+	Blocks  []Block
+	Created time.Time
+	Updated time.Time
+}
+
+type Block struct {
 	Id        int64
 	Title     string
+	SurveyId  int64
 	Questions []Question
-	Created   time.Time
-	Updated   time.Time
 }
 
 type Question struct {
@@ -31,6 +42,7 @@ type Question struct {
 	Title       string
 	Description string
 	SurveyId    int64
+	BlockId     int64
 	Options     OptionsSlice
 }
 

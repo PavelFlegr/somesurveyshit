@@ -15,7 +15,7 @@ func ListSurveys(userId int64) []Survey {
 	if err != nil {
 		log.Panic("Couldn't list surveys", err)
 	}
-	surveys := []Survey{}
+	var surveys []Survey
 	for rows.Next() {
 		var survey Survey
 		err = rows.Scan(&survey.Id, &survey.Title, &survey.Created, &survey.Updated)
@@ -33,10 +33,10 @@ func GetSurvey(surveyId int64) Survey {
 	survey.Id = surveyId
 	var created string
 	var updated string
-	var questionsOrder []int64
-	err := context.Ctx.Db.QueryRow("select title, created, updated, questions_order from surveys where id = $1", surveyId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&questionsOrder))
+	var blocksOrder []int64
+	err := context.Ctx.Db.QueryRow("select title, created, updated, blocks_order from surveys where id = $1", surveyId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&blocksOrder))
 	if err != nil {
-		log.Print("Couldn't get survey", err)
+		log.Print(err)
 	}
 
 	createdTime, _ := time.Parse(time.RFC3339, created)
@@ -44,13 +44,17 @@ func GetSurvey(surveyId int64) Survey {
 	survey.Created = createdTime
 	survey.Updated = updatedTime
 
-	tmp := make(map[int64]Question)
-	survey.Questions = ListQuestions(surveyId)
-	for _, v := range survey.Questions {
-		tmp[v.Id] = v
+	tmp := make(map[int64]Block)
+	survey.Blocks, err = ListBlocks(surveyId)
+	if err != nil {
+		println(err)
+		return survey
 	}
-	for i, v := range questionsOrder {
-		survey.Questions[i] = tmp[v]
+	for _, b := range survey.Blocks {
+		tmp[b.Id] = b
+	}
+	for i, b := range blocksOrder {
+		survey.Blocks[i] = tmp[b]
 	}
 
 	return survey
@@ -85,8 +89,8 @@ func DeleteSurvey(surveyId int64, userId int64) {
 	}
 }
 
-func ReorderSurvey(surveyId int64, questionsOrder []int64, userId int64) {
-	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), questions_order = $1 where id = $2 and user_id = $3", pq.Array(questionsOrder), surveyId, userId)
+func ReorderSurvey(surveyId int64, blocksOrder []int64, userId int64) {
+	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), blocks_order = $1 where id = $2 and user_id = $3", pq.Array(blocksOrder), surveyId, userId)
 	if err != nil {
 		log.Println("ReorderSurvey", err)
 	}
@@ -116,9 +120,21 @@ func (a *Response) Scan(value interface{}) error {
 	return nil
 }
 
-func RecordResponse(surveyId int64, response Response) {
-	_, err := context.Ctx.Db.Exec("insert into responses (survey_id, Response) VALUES ($1, $2)", surveyId, response)
+func RecordResponse(surveyId int64, response Response) (int64, error) {
+	var responseId int64
+	err := context.Ctx.Db.QueryRow("insert into responses (survey_id, response) VALUES ($1, $2) returning id", surveyId, response).Scan(&responseId)
 	if err != nil {
-		log.Println("RecordResponse", err)
+		log.Println(err)
 	}
+
+	return responseId, err
+}
+
+func MergeResponse(responseId int64, response Response) error {
+	_, err := context.Ctx.Db.Exec("update responses set response = response || $1 where id = $2", response, responseId)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return err
 }

@@ -1,4 +1,8 @@
-<div class="question">
+<div class="question block">
+    <form hx-post="/manage/survey/{{.SurveyId}}/question/{{.Id}}/reorder" hx-target="closest .question" hx-trigger="reorder" hx-swap="outerHTML">
+        <input type="hidden" name="index">
+        <input type="hidden" name="blockId">
+    </form>
     <div class="has-background-info pb-3 is-clickable drag-handle"></div>
     <div class="box">
         <div class="level">
@@ -16,7 +20,7 @@
                     </div>
                     <div class="dropdown-menu" id="dropdown-menu" role="menu">
                         <div class="dropdown-content">
-                            <button class="button is-link is-inverted dropdown-item" hx-get="/manage/survey/{{.SurveyId}}/question{{.Id}}/edit" hx-target="closest .question" hx-swap="outerHTML">
+                            <button class="button is-link is-inverted dropdown-item" hx-get="/manage/survey/{{.SurveyId}}/question/{{.Id}}/edit" hx-target="closest .question" hx-swap="outerHTML">
                                 Edit
                             </button>
                             <button class="button is-danger is-inverted dropdown-item"
