@@ -1,12 +1,46 @@
 <div class="block">
-    <div class="card" _="on collapse toggle .collapsed on .card-content in me">
-        <header class="card-header">
-            <span class="card-header-title">{{.Title}}</span>
-            <button _="on click trigger collapse on closest .card" class="card-header-icon">
-            <span class="icon">
-                <i class="mdi mdi-chevron-down"></i>
+    <form hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/reorder" hx-trigger="reorder" hx-swap="none">
+        <input type="hidden" name="index">
+    </form>
+    <div class="card">
+        <header _="on click toggle .collapsed on next .card-content" class="card-header is-clickable">
+            <span class="card-header-title">
+                <span class="subtitle">
+                    <span class="icon drag-handle">
+                        <span class="mdi mdi-drag"></span>
+                     </span>
+                    <span class="block-title">
+                        {{block "block-title" .}}
+                        {{.Title}}
+                        <span hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/title/edit" _="on click halt the event" hx-target="closest .block-title" class="icon is-small is-clickable">
+                            <span class="mdi ml-2 mdi-pencil"></span>
+                        </span>
+                        {{end}}
+                    </span>
+                </span>
             </span>
-            </button>
+            <div class="dropdown is-hoverable card-header-icon">
+                <div class="dropdown-trigger">
+                    <button type="button" class="button is-text" aria-haspopup="true" aria-controls="dropdown-menu">
+                    <span class="icon is-medium">
+                        <span class="mdi mdi-dots-vertical"></span>
+                    </span>
+                    </button>
+                </div>
+                <div class="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <button class="button is-danger is-inverted dropdown-item"
+                                hx-delete="/manage/survey/{{.SurveyId}}/block/{{.Id}}"
+                                hx-target="closest .block"
+                                hx-swap="remove"
+                                _="on htmx:confirm(issueRequest) halt the event call Swal.fire({title: 'Are you sure you want to delete this block?', showCancelButton: true})
+                               if result.isConfirmed issueRequest()"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
         </header>
         <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="beforeend" hx-target="find .questions" class="card-content collapsed">
             <button class="button is-primary level-item level-right"  hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-target="next .questions" hx-swap="beforeend">
@@ -25,3 +59,20 @@
         </div>
     </div>
 </div>
+
+
+{{define "edit-block-title"}}
+<form _="on click halt the event" hx-target="closest .block-title">
+    <div class="field is-horizontal">
+        <div class="control">
+            <input class="input" name="title" value="{{.Title}}">
+        </div>
+        <div class="control">
+            <button hx-put="/manage/survey/{{.SurveyId}}/block/{{.Id}}/title" class="button is-primary">Save</button>
+        </div>
+        <div class="control">
+            <button hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/title" class="button">Cancel</button>
+        </div>
+    </div>
+</form>
+{{end}}

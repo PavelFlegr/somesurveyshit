@@ -2,6 +2,6 @@
 <form hx-target=".navigation" hax-swap="outerHTML">
     <input class="input" name="title" value="{{.Title}}">
     <button hx-put="/manage/survey/{{.Id}}/title" class="button is-primary">Save</button>
-    <button hx-get="/manage/survey//{{.Id}}/title" class="button">Cancel</button>
+    <button hx-get="/manage/survey/{{.Id}}/title" class="button">Cancel</button>
 </form>
 {{end}}

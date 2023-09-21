@@ -13,13 +13,24 @@
                 handle: '.drag-handle'
             })
         }
+        Sortable.create(htmx.find('#blocks'), {
+            handle: '.drag-handle',
+            filter: 'input',
+            preventOnFilter: false,
+            onEnd: e => {
+                if (e.newIndex === e.oldIndex) {
+                    return
+                }
+                htmx.find(e.item, 'input[name=index]').value = e.newIndex
+                htmx.trigger(htmx.find(e.item, 'form'), 'reorder')
+            }
+        })
         for (let questions of htmx.findAll(el, '.questions')) {
             console.log(questions)
             Sortable.create(questions, {
                 group: 'questions',
                 handle: '.drag-handle',
                 onEnd: (e) => {
-                    console.log(e);
                     if (e.newIndex === e.oldIndex && e.to.dataset.blockid === e.from.dataset.blockId) {
                         return
                     }

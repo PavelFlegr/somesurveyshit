@@ -89,10 +89,35 @@ func DeleteSurvey(surveyId int64, userId int64) {
 	}
 }
 
-func ReorderSurvey(surveyId int64, blocksOrder []int64, userId int64) {
-	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), blocks_order = $1 where id = $2 and user_id = $3", pq.Array(blocksOrder), surveyId, userId)
+func ReorderBlock(surveyId int64, blockId int64, index int) {
+	_, err := context.Ctx.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
 	if err != nil {
-		log.Println("ReorderSurvey", err)
+		log.Println(err)
+		return
+	}
+
+	var blocksOrder []int64
+	err = context.Ctx.Db.QueryRow("select blocks_order from surveys where id = $1", surveyId).Scan((*pq.Int64Array)(&blocksOrder))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var newOrder []int64
+	if index == 0 {
+		newOrder = append(newOrder, blockId)
+	}
+	for i := 0; i < len(blocksOrder); i++ {
+		newOrder = append(newOrder, blocksOrder[i])
+		if i+1 == index {
+			newOrder = append(newOrder, blockId)
+		}
+	}
+
+	_, err = context.Ctx.Db.Exec("update surveys set blocks_order = $1, updated = now() where id = $2", pq.Array(newOrder), surveyId)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 }
 

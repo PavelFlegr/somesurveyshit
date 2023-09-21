@@ -68,13 +68,28 @@ func GetBlock(blockId int64, surveyId int64) (Block, error) {
 	return block, err
 }
 
-func RemoveBlock(blockId int64, surveyId int64) error {
+func RemoveBlock(surveyId int64, blockId int64) error {
 	var _, err = c.Ctx.Db.Exec("delete from blocks where id = $1 and survey_id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 	}
 
 	_, err = c.Ctx.Db.Exec("update surveys set updated = now(), blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
+	if err != nil {
+		log.Println(err)
+	}
+
+	_, err = c.Ctx.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return err
+}
+
+func RenameBlock(blockId int64, surveyId int64, title string) error {
+	_, err := c.Ctx.Db.Exec("update blocks set title = $1 where id = $2 and survey_id = $3", title, blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 	}

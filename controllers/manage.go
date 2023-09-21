@@ -119,6 +119,42 @@ func Manage(template *template.Template, r chi.Router) {
 		})
 	})
 
+	r.Put("/manage/survey/{surveyId}/block/{blockId}/title", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "read") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		title := r.PostFormValue("title")
+		services.RenameBlock(blockId, surveyId, title)
+		block, _ := services.GetBlock(blockId, surveyId)
+		template.ExecuteTemplate(w, "block-title", block)
+	})
+
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/title", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "read") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		block, _ := services.GetBlock(blockId, surveyId)
+		template.ExecuteTemplate(w, "block-title", block)
+	})
+
 	r.Get("/manage/survey/{surveyId}/title/edit", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
@@ -135,26 +171,21 @@ func Manage(template *template.Template, r chi.Router) {
 		template.ExecuteTemplate(w, "edit-survey-title", survey)
 	})
 
-	r.Put("/manage/survey/{surveyId}/reorder", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/title/edit", func(w http.ResponseWriter, r *http.Request) {
 		userId, authErr := context.CheckAuth(r)
 		if authErr != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
-		r.ParseForm()
 		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
-		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "read") {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		var questionsOrder []int64
-		for _, question := range r.PostForm["question"] {
-			id, _ := strconv.ParseInt(question, 10, 0)
-			questionsOrder = append(questionsOrder, id)
-		}
-
-		services.ReorderSurvey(surveyId, questionsOrder, userId)
+		block, _ := services.GetBlock(blockId, surveyId)
+		template.ExecuteTemplate(w, "edit-block-title", block)
 	})
 
 	r.Post("/manage/survey/{surveyId}/question/{questionId}/reorder", func(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +213,24 @@ func Manage(template *template.Template, r chi.Router) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+	})
+
+	r.Post("/manage/survey/{surveyId}/block/{blockId}/reorder", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		index, _ := strconv.Atoi(r.PostFormValue("index"))
+		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		services.ReorderBlock(surveyId, blockId, index)
 	})
 
 	r.Get("/manage/survey/{surveyId}/block/{blockId}/question", func(w http.ResponseWriter, r *http.Request) {
@@ -329,6 +378,22 @@ func Manage(template *template.Template, r chi.Router) {
 			}
 			services.DeleteQuestion(surveyId, questionId)
 		})
+	})
+
+	r.Delete("/manage/survey/{surveyId}/block/{blockId}", func(w http.ResponseWriter, r *http.Request) {
+		userId, authErr := context.CheckAuth(r)
+		if authErr != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+		surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+		if !services.HasPermission(userId, "survey", surveyId, "edit") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		services.RemoveBlock(surveyId, blockId)
 	})
 
 	r.Get("/manage/survey/{surveyId}/question/{questionId}/edit", func(w http.ResponseWriter, r *http.Request) {

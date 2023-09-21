@@ -100,7 +100,7 @@ func DeleteQuestion(surveyId int64, questionId int64) {
 		log.Println(err)
 		return
 	}
-	_, err = context.Ctx.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", blockId, surveyId)
+	_, err = context.Ctx.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", questionId, blockId)
 	if err != nil {
 		log.Println(err)
 		return
