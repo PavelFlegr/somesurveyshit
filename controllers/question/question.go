@@ -51,7 +51,12 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	question := services.CreateQuestion(surveyId, userId, blockId)
 
-	err := global.Template.ExecuteTemplate(w, "question.html", question)
+	index, err := strconv.Atoi(r.PostFormValue("index"))
+	if err == nil {
+		services.ReorderQuestion(surveyId, question.Id, blockId, index)
+	}
+
+	err = global.Template.ExecuteTemplate(w, "question.html", question)
 	if err != nil {
 		log.Println(err)
 	}

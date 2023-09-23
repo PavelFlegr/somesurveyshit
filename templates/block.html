@@ -2,6 +2,14 @@
     <form hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/reorder" hx-trigger="reorder" hx-swap="none">
         <input type="hidden" name="index">
     </form>
+    <div class="is-flex is-justify-content-center">
+        <button hx-post="/manage/survey/{{.SurveyId}}/block" hx-vals="js:index:findIndex(htmx.closest(event.target, '.block'))" hx-target="closest .block" hx-swap="beforebegin" class="button is-primary is-inverted">
+            <span class="icon">
+                <span class="mdi mdi-plus"></span>
+            </span>
+            <span>Add block</span>
+        </button>
+    </div>
     <div class="card">
         <header _="on click toggle .collapsed on next .card-content" class="card-header is-clickable drag-handle">
             <span class="card-header-title">
@@ -42,19 +50,19 @@
                 </div>
             </div>
         </header>
-        <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="beforeend" hx-target="find .questions" class="card-content collapsed">
-            <button class="button is-primary level-item level-right"  hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-target="next .questions" hx-swap="beforeend">
-                    <span class="icon">
-                        <span class="mdi mdi-plus"></span>
-                    </span>
-                <span>Add new question</span>
-            </button>
+        <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="afterbegin" hx-target="find .questions" class="card-content collapsed">
             <div class="questions" data-blockid="{{.Id}}">
                 {{define "questions"}}
                 {{range $i, $question := .}}
                     {{template "question.html" $question}}
                 {{end}}
                 {{end}}
+                <button hx-target="this" hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-swap="beforebegin" class="button is-primary is-inverted mx-auto is-block">
+                    <span class="icon">
+                        <span class="mdi mdi-plus"></span>
+                    </span>
+                    <span>Add question</span>
+                </button>
             </div>
         </div>
     </div>

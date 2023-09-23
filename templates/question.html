@@ -1,4 +1,12 @@
 <div class="question block">
+    <div class="is-flex is-justify-content-center">
+        <button hx-post="/manage/survey/{{.SurveyId}}/block/{{.BlockId}}/question" hx-target="closest .question" hx-swap="beforebegin" hx-vals="js:index:findIndex(htmx.closest(event.target, '.question'))" class="button is-primary is-inverted">
+            <span class="icon">
+                <span class="mdi mdi-plus"></span>
+            </span>
+            <span>Add question</span>
+        </button>
+    </div>
     <form hx-post="/manage/survey/{{.SurveyId}}/question/{{.Id}}/reorder" hx-target="closest .question" hx-trigger="reorder" hx-swap="outerHTML">
         <input type="hidden" name="index">
         <input type="hidden" name="blockId">

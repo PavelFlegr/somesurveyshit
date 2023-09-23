@@ -2,6 +2,9 @@
 {{with .Data}}
 {{block "survey" .}}
 <script>
+    function findIndex(e) {
+        return Array.from(e.parentNode.children).indexOf(e)
+    }
     htmx.onLoad((el) => {
         for (let editor of el.getElementsByClassName('editor')) {
             new Quill(editor, {
@@ -70,14 +73,6 @@
                 </h1>
             </div>
             {{end}}
-            <div class="level-item level-right">
-                <button class="button is-primary level-item level-right" hx-post="/manage/survey/{{.Id}}/block" hx-target="#blocks" hx-swap="beforeend">
-                    <span class="icon">
-                        <span class="mdi mdi-plus"></span>
-                    </span>
-                    <span>Add new block</span>
-                </button>
-            </div>
         </div>
     </div>
     {{end}}
@@ -87,6 +82,12 @@
         {{template "block.html" .}}
         {{end}}
         {{end}}
+        <button hx-post="/manage/survey/{{.Id}}/block" hx-swap="beforebegin" class="button is-primary is-inverted is-block mx-auto">
+            <span class="icon">
+                <span class="mdi mdi-plus"></span>
+            </span>
+            <span>Add block</span>
+        </button>
     </div>
 </div>
 {{end}}

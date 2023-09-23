@@ -115,6 +115,12 @@ func CreateBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var index int
+	index, err = strconv.Atoi(r.PostFormValue("index"))
+	if err == nil {
+		services.ReorderBlock(surveyId, block.Id, index)
+	}
+
 	err = global.Template.ExecuteTemplate(w, "block", block)
 	if err != nil {
 		log.Println(err)
