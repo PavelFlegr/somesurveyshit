@@ -56,7 +56,7 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 		services.ReorderQuestion(surveyId, question.Id, blockId, index)
 	}
 
-	err = global.Template.ExecuteTemplate(w, "question.html", question)
+	err = global.Template.ExecuteTemplate(w, "edit-question.html", question)
 	if err != nil {
 		log.Println(err)
 	}
