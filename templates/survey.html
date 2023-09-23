@@ -10,12 +10,16 @@
         }
         for (let options of el.getElementsByClassName('options')) {
             Sortable.create(options, {
-                handle: '.drag-handle'
+                handle: '.drag-handle',
+                animation: 100,
+                invertSwap: true,
             })
         }
         Sortable.create(htmx.find('#blocks'), {
             handle: '.drag-handle',
             filter: 'input',
+            animation: 100,
+            invertSwap: true,
             preventOnFilter: false,
             onEnd: e => {
                 if (e.newIndex === e.oldIndex) {
@@ -23,12 +27,16 @@
                 }
                 htmx.find(e.item, 'input[name=index]').value = e.newIndex
                 htmx.trigger(htmx.find(e.item, 'form'), 'reorder')
+            },
+            onStart: e => {
+                htmx.find(e.item, '.card-content').classList.add('collapsed')
             }
         })
         for (let questions of htmx.findAll(el, '.questions')) {
-            console.log(questions)
             Sortable.create(questions, {
                 group: 'questions',
+                animation: 100,
+                invertSwap: true,
                 handle: '.drag-handle',
                 onEnd: (e) => {
                     if (e.newIndex === e.oldIndex && e.to.dataset.blockid === e.from.dataset.blockId) {
