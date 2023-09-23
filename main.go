@@ -6,15 +6,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/securecookie"
 	_ "github.com/lib/pq"
-	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"log"
-	"main/context"
-	_ "main/context"
-	"main/controllers"
+	"main/controllers/answer"
+	"main/controllers/auth"
+	"main/controllers/block"
+	"main/controllers/question"
+	"main/controllers/survey"
+	"main/global"
+	_ "main/global"
 	"main/services"
 	"net/http"
-	"net/mail"
 	"os"
 )
 
@@ -28,8 +30,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	context.Ctx = context.AppContext{Db: db, Sc: securecookie.New(hashKey, nil)}
-	indexTmpl, err := template.New("index.html").Funcs(template.FuncMap{
+	global.Db = db
+	global.Sc = securecookie.New(hashKey, nil)
+	var tmpl *template.Template
+	tmpl, err = template.New("index.html").Funcs(template.FuncMap{
 		"unescape": func(val string) template.HTML {
 			return template.HTML(val)
 		},
@@ -38,115 +42,63 @@ func main() {
 		log.Fatal(err)
 	}
 
+	global.Template = tmpl
+
 	log.SetFlags(log.Llongfile | log.Ltime | log.Ldate | log.Lmsgprefix)
 
 	r := chi.NewRouter()
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		_, authErr := context.CheckAuth(r)
-		indexTmpl.Execute(w, services.TemplateData{
+		_, authErr := global.CheckAuth(r)
+		err := tmpl.Execute(w, services.TemplateData{
 			LoggedIn: authErr == nil,
 		})
-	})
-
-	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		_, authErr := context.CheckAuth(r)
-		if r.Header.Get("Hx-Request") == "true" {
-			indexTmpl.ExecuteTemplate(w, "login", nil)
-			return
-		}
-		indexTmpl.ExecuteTemplate(w, "login.html", services.TemplateData{
-			LoggedIn: authErr == nil,
-		})
-	})
-
-	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		email := r.PostFormValue("email")
-		password := r.PostFormValue("password")
-		user, err := services.GetUserByEmail(email)
 		if err != nil {
-			indexTmpl.ExecuteTemplate(w, "error", "Account with this email does not exist")
-			return
+			log.Println(err)
 		}
-
-		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-		if err != nil {
-			indexTmpl.ExecuteTemplate(w, "error", "Password is incorrect")
-			return
-		}
-
-		cookie, _ := context.Ctx.Sc.Encode("userId", user.Id)
-
-		http.SetCookie(w, &http.Cookie{
-			HttpOnly: true,
-			Value:    cookie,
-			Name:     "userId",
-			SameSite: http.SameSiteStrictMode},
-		)
-
-		w.Header().Set("HX-Redirect", "/manage/dashboard")
 	})
 
-	r.Get("/logout", func(w http.ResponseWriter, r *http.Request) {
-		http.SetCookie(w, &http.Cookie{
-			Name:     "userId",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-		})
+	RegisterRoutes(r)
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-	})
+	err = http.ListenAndServe(fmt.Sprintf(":%v", port), r)
+	if err != nil {
+		log.Println(err)
+	}
+}
 
-	r.Get("/register", func(w http.ResponseWriter, r *http.Request) {
-		indexTmpl.ExecuteTemplate(w, "register", nil)
-	})
+func RegisterRoutes(r chi.Router) {
+	r.Get("/manage/dashboard", survey.Dashboard)
+	r.Post("/manage/survey", survey.AddSurvey)
+	r.Get("/manage/survey/{surveyId}", survey.GetSurvey)
+	r.Delete("/manage/survey/{surveyId}", survey.DeleteSurvey)
+	r.Get("/manage/survey/{surveyId}/title", survey.GetSurveyTitle)
+	r.Get("/manage/survey/{surveyId}/title/edit", survey.GetSurveyTitleEdit)
+	r.Put("/manage/survey/{surveyId}/title", survey.PutSurveyTitle)
+	r.Get("/manage/option", survey.GetEmptyOption)
+	r.Get("/manage/survey/{surveyId}/download", survey.DownloadSurvey)
 
-	r.Post("/register", func(w http.ResponseWriter, r *http.Request) {
-		email, err := mail.ParseAddress(r.PostFormValue("email"))
-		if err != nil {
-			indexTmpl.ExecuteTemplate(w, "error", "Invalid email address")
-			return
-		}
+	r.Put("/manage/survey/{surveyId}/block/{blockId}/title", block.PutBlockTitle)
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/title", block.GetBlockTitle)
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/title/edit", block.GetBlockTitleEdit)
+	r.Post("/manage/survey/{surveyId}/block/{blockId}/reorder", block.ReorderBlock)
+	r.Post("/manage/survey/{surveyId}/block", block.CreateBlock)
+	r.Get("/manage/survey/{surveyId}/block/{blockId}/question", block.ListQuestions)
+	r.Delete("/manage/survey/{surveyId}/block/{blockId}", block.DeleteBlock)
 
-		password := r.PostFormValue("password")
-		password2 := r.PostFormValue("password2")
+	r.Post("/manage/survey/{surveyId}/question/{questionId}/reorder", question.ReorderQuestion)
+	r.Post("/manage/survey/{surveyId}/block/{blockId}/question", question.CreateQuestion)
+	r.Get("/manage/survey/{surveyId}/question/{questionId}", question.GetQuestion)
+	r.Put("/manage/survey/{surveyId}/question/{questionId}", question.PutQuestion)
+	r.Delete("/manage/survey/{surveyId}/question/{questionId}", question.DeleteQuestion)
+	r.Get("/manage/survey/{surveyId}/question/{questionId}/edit", question.GetQuestionEdit)
 
-		if len(password) < 5 {
-			indexTmpl.ExecuteTemplate(w, "error", "Password must be at least 5 characters long")
-			return
-		}
+	r.Get("/survey/{surveyId}", answer.GetSurvey)
+	r.Post("/survey/{surveyId}", answer.SubmitAnswers)
+	r.Get("/goodbye", answer.ShowGoodbye)
 
-		if password != password2 {
-			indexTmpl.ExecuteTemplate(w, "error", "Passwords don't match")
-			return
-		}
-
-		hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-		var id int64
-		id, err = services.CreateUser(email.Address, string(hash))
-		if err != nil {
-			indexTmpl.ExecuteTemplate(w, "error", "An account with this email already exists")
-		}
-
-		cookie, _ := context.Ctx.Sc.Encode("userId", id)
-
-		http.SetCookie(w, &http.Cookie{
-			HttpOnly: true,
-			Value:    cookie,
-			Name:     "userId",
-			SameSite: http.SameSiteStrictMode},
-		)
-
-		w.Header().Set("HX-Redirect", "/manage/dashboard")
-	})
-
-	r.Get("/goodbye", func(w http.ResponseWriter, r *http.Request) {
-		indexTmpl.ExecuteTemplate(w, "goodbye.html", nil)
-	})
-
-	controllers.Survey(indexTmpl, r)
-	controllers.Manage(indexTmpl, r)
-
-	http.ListenAndServe(fmt.Sprintf(":%v", port), r)
+	r.Get("/login", auth.GetLogin)
+	r.Post("/login", auth.Login)
+	r.Get("/logout", auth.Logout)
+	r.Get("/register", auth.GetRegister)
+	r.Post("/register", auth.Register)
 }

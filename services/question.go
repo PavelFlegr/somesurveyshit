@@ -3,11 +3,11 @@ package services
 import (
 	"github.com/lib/pq"
 	"log"
-	"main/context"
+	"main/global"
 )
 
 func ListQuestions(surveyId int64, blockId int64) ([]Question, error) {
-	rows, err := context.Ctx.Db.Query("select id, description, title, options, survey_id, block_id from questions where block_id = $1 and survey_id = $2", blockId, surveyId)
+	rows, err := global.Db.Query("select id, description, title, options, survey_id, block_id from questions where block_id = $1 and survey_id = $2", blockId, surveyId)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -28,7 +28,7 @@ func ListQuestions(surveyId int64, blockId int64) ([]Question, error) {
 }
 
 func ListQuestionsBySurvey(surveyId int64) ([]Question, error) {
-	rows, err := context.Ctx.Db.Query("select id, description, title, options, survey_id, block_id from questions where survey_id = $1", surveyId)
+	rows, err := global.Db.Query("select id, description, title, options, survey_id, block_id from questions where survey_id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -52,7 +52,7 @@ func GetQuestion(surveyId int64, questionId int64) Question {
 	var question Question
 	question.Id = questionId
 	question.SurveyId = surveyId
-	err := context.Ctx.Db.QueryRow("select description, title, options from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&question.Description, &question.Title, &question.Options)
+	err := global.Db.QueryRow("select description, title, options from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&question.Description, &question.Title, &question.Options)
 	if err != nil {
 		log.Print(err)
 	}
@@ -64,15 +64,15 @@ func CreateQuestion(surveyId int64, userId int64, blockId int64) Question {
 	var question Question
 	question.Title = "New Question"
 	question.SurveyId = surveyId
-	err := context.Ctx.Db.QueryRow("insert into questions (survey_id, title, user_id, block_id) values ($1, $2, $3, $4) returning id", surveyId, question.Title, userId, blockId).Scan(&question.Id)
+	err := global.Db.QueryRow("insert into questions (survey_id, title, user_id, block_id) values ($1, $2, $3, $4) returning id", surveyId, question.Title, userId, blockId).Scan(&question.Id)
 	if err != nil {
 		log.Print(err)
 	}
-	_, err = context.Ctx.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
+	_, err = global.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = context.Ctx.Db.Exec("update blocks set questions_order = array_append(questions_order, $1) where id = $2", question.Id, blockId)
+	_, err = global.Db.Exec("update blocks set questions_order = array_append(questions_order, $1) where id = $2", question.Id, blockId)
 	if err != nil {
 		log.Println(err)
 	}
@@ -81,26 +81,26 @@ func CreateQuestion(surveyId int64, userId int64, blockId int64) Question {
 }
 
 func UpdateQuestion(surveyId int64, question Question) {
-	_, err := context.Ctx.Db.Exec("update questions set title = $1, description = $2, options = $3 where id = $4 and survey_id = $5", question.Title, question.Description, question.Options, question.Id, surveyId)
+	_, err := global.Db.Exec("update questions set title = $1, description = $2, options = $3 where id = $4 and survey_id = $5", question.Title, question.Description, question.Options, question.Id, surveyId)
 	if err != nil {
 		log.Println(err)
 	}
-	context.Ctx.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
+	global.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
 }
 
 func DeleteQuestion(surveyId int64, questionId int64) {
 	var blockId int64
-	err := context.Ctx.Db.QueryRow("delete from questions where id = $1 and survey_id = $2 returning block_id", questionId, surveyId).Scan(&blockId)
+	err := global.Db.QueryRow("delete from questions where id = $1 and survey_id = $2 returning block_id", questionId, surveyId).Scan(&blockId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	_, err = context.Ctx.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
+	_, err = global.Db.Exec("update surveys set updated = now() where id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	_, err = context.Ctx.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", questionId, blockId)
+	_, err = global.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", questionId, blockId)
 	if err != nil {
 		log.Println(err)
 		return
@@ -109,20 +109,20 @@ func DeleteQuestion(surveyId int64, questionId int64) {
 
 func ReorderQuestion(surveyId int64, questionId int64, blockId int64, index int) {
 	var oldBlockId int64
-	err := context.Ctx.Db.QueryRow("select block_id from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&oldBlockId)
+	err := global.Db.QueryRow("select block_id from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&oldBlockId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	_, err = context.Ctx.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", questionId, oldBlockId)
+	_, err = global.Db.Exec("update blocks set questions_order = array_remove(questions_order, $1) where id = $2", questionId, oldBlockId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	var questionsOrder []int64
-	err = context.Ctx.Db.QueryRow("select questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan((*pq.Int64Array)(&questionsOrder))
+	err = global.Db.QueryRow("select questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan((*pq.Int64Array)(&questionsOrder))
 	if err != nil {
 		log.Println(err)
 		return
@@ -139,13 +139,13 @@ func ReorderQuestion(surveyId int64, questionId int64, blockId int64, index int)
 		}
 	}
 
-	_, err = context.Ctx.Db.Exec("update blocks set questions_order = $1 where id = $2 and survey_id = $3", pq.Array(newOrder), blockId, surveyId)
+	_, err = global.Db.Exec("update blocks set questions_order = $1 where id = $2 and survey_id = $3", pq.Array(newOrder), blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	_, err = context.Ctx.Db.Exec("update questions set block_id = $1 where id = $2 and survey_id = $3", blockId, questionId, surveyId)
+	_, err = global.Db.Exec("update questions set block_id = $1 where id = $2 and survey_id = $3", blockId, questionId, surveyId)
 	if err != nil {
 		log.Println(err)
 		return

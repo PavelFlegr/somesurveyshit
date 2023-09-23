@@ -1,8 +1,9 @@
-package context
+package global
 
 import (
 	"database/sql"
 	"github.com/gorilla/securecookie"
+	"html/template"
 	"log"
 	"net/http"
 )
@@ -14,7 +15,7 @@ func CheckAuth(r *http.Request) (int64, error) {
 		return 0, err
 	}
 	var value int64
-	err = Ctx.Sc.Decode("userId", cookie.Value, &value)
+	err = Sc.Decode("userId", cookie.Value, &value)
 	if err != nil {
 		log.Println("Authentication failed", err)
 	}
@@ -22,9 +23,6 @@ func CheckAuth(r *http.Request) (int64, error) {
 	return value, err
 }
 
-type AppContext struct {
-	Db *sql.DB
-	Sc *securecookie.SecureCookie
-}
-
-var Ctx AppContext
+var Db *sql.DB
+var Template *template.Template
+var Sc *securecookie.SecureCookie

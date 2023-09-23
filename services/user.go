@@ -3,12 +3,12 @@ package services
 import (
 	"fmt"
 	"log"
-	"main/context"
+	"main/global"
 )
 
 func CreateUser(email string, password string) (int64, error) {
 	var id int64
-	err := context.Ctx.Db.QueryRow("insert into users (email, password) values ($1, $2) returning id", email, password).Scan(&id)
+	err := global.Db.QueryRow("insert into users (email, password) values ($1, $2) returning id", email, password).Scan(&id)
 	if err != nil {
 		log.Println(err)
 	}
@@ -18,7 +18,7 @@ func CreateUser(email string, password string) (int64, error) {
 
 func GetUserByEmail(email string) (User, error) {
 	var user User
-	err := context.Ctx.Db.QueryRow("select id, email, password from users where email = $1", email).Scan(&user.Id, &user.Email, &user.Password)
+	err := global.Db.QueryRow("select id, email, password from users where email = $1", email).Scan(&user.Id, &user.Email, &user.Password)
 	if err != nil {
 		log.Println(err)
 	}
@@ -28,7 +28,7 @@ func GetUserByEmail(email string) (User, error) {
 
 func AddPermission(userId int64, entityType string, entityId int64, action string) {
 	query := fmt.Sprintf("insert into %v_permissions (user_id, action, entity_id) VALUES ($1, $2, $3)", entityType)
-	_, err := context.Ctx.Db.Exec(query, userId, action, entityId)
+	_, err := global.Db.Exec(query, userId, action, entityId)
 	if err != nil {
 		log.Println(err)
 	}
@@ -37,7 +37,7 @@ func AddPermission(userId int64, entityType string, entityId int64, action strin
 func HasPermission(userId int64, entityType string, entityId int64, action string) bool {
 	query := fmt.Sprintf("select exists(select 1 from %v_permissions where user_id = $1 and entity_id = $2 and action = $3)", entityType)
 	var found bool
-	err := context.Ctx.Db.QueryRow(query, userId, entityId, action).Scan(&found)
+	err := global.Db.QueryRow(query, userId, entityId, action).Scan(&found)
 	if err != nil {
 		log.Println(err)
 	}
@@ -46,7 +46,7 @@ func HasPermission(userId int64, entityType string, entityId int64, action strin
 
 func RemovePermission(userId int64, entityType string, entityId int64, action string) {
 	query := fmt.Sprintf("delete from %v_permissions where user_id = $1 and entity_id = $2 and action = $3", entityType)
-	_, err := context.Ctx.Db.Exec(query, userId, entityId, action)
+	_, err := global.Db.Exec(query, userId, entityId, action)
 	if err != nil {
 		log.Println(err)
 	}

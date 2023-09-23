@@ -3,17 +3,17 @@ package services
 import (
 	"github.com/lib/pq"
 	"log"
-	c "main/context"
+	"main/global"
 )
 
 func CreateBlock(block *Block, userId int64) error {
-	var err = c.Ctx.Db.QueryRow("insert into blocks (user_id, survey_id, title, created) values ($1, $2, $3, now()) returning id", userId, block.SurveyId, block.Title).Scan(&block.Id)
+	var err = global.Db.QueryRow("insert into blocks (user_id, survey_id, title, created) values ($1, $2, $3, now()) returning id", userId, block.SurveyId, block.Title).Scan(&block.Id)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	_, err = c.Ctx.Db.Exec("update surveys set updated = now(), blocks_order = array_append(blocks_order, $1) where id = $2", block.Id, block.SurveyId)
+	_, err = global.Db.Exec("update surveys set updated = now(), blocks_order = array_append(blocks_order, $1) where id = $2", block.Id, block.SurveyId)
 	if err != nil {
 		log.Println(err)
 	}
@@ -22,7 +22,7 @@ func CreateBlock(block *Block, userId int64) error {
 }
 
 func ListBlocks(surveyId int64) ([]Block, error) {
-	var rows, err = c.Ctx.Db.Query("select id, title from blocks where survey_id = $1", surveyId)
+	var rows, err = global.Db.Query("select id, title from blocks where survey_id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -46,7 +46,7 @@ func ListBlocks(surveyId int64) ([]Block, error) {
 func GetBlock(blockId int64, surveyId int64) (Block, error) {
 	block := Block{Id: blockId}
 	var questionsOrder []int64
-	var err = c.Ctx.Db.QueryRow("select id, survey_id, title, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(&block.Id, &block.SurveyId, &block.Title, (*pq.Int64Array)(&questionsOrder))
+	var err = global.Db.QueryRow("select id, survey_id, title, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(&block.Id, &block.SurveyId, &block.Title, (*pq.Int64Array)(&questionsOrder))
 	if err != nil {
 		log.Println(err)
 		return block, err
@@ -69,17 +69,17 @@ func GetBlock(blockId int64, surveyId int64) (Block, error) {
 }
 
 func RemoveBlock(surveyId int64, blockId int64) error {
-	var _, err = c.Ctx.Db.Exec("delete from blocks where id = $1 and survey_id = $2", blockId, surveyId)
+	var _, err = global.Db.Exec("delete from blocks where id = $1 and survey_id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 	}
 
-	_, err = c.Ctx.Db.Exec("update surveys set updated = now(), blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
+	_, err = global.Db.Exec("update surveys set updated = now(), blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 	}
 
-	_, err = c.Ctx.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
+	_, err = global.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -89,7 +89,7 @@ func RemoveBlock(surveyId int64, blockId int64) error {
 }
 
 func RenameBlock(blockId int64, surveyId int64, title string) error {
-	_, err := c.Ctx.Db.Exec("update blocks set title = $1 where id = $2 and survey_id = $3", title, blockId, surveyId)
+	_, err := global.Db.Exec("update blocks set title = $1 where id = $2 and survey_id = $3", title, blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 	}

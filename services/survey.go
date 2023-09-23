@@ -6,12 +6,12 @@ import (
 	"errors"
 	"github.com/lib/pq"
 	"log"
-	"main/context"
+	"main/global"
 	"time"
 )
 
 func ListSurveys(userId int64) []Survey {
-	rows, err := context.Ctx.Db.Query("select id, title, created, updated from surveys inner join public.survey_permissions sp on surveys.id = sp.entity_id where sp.user_id = $1 and sp.action = 'read'", userId)
+	rows, err := global.Db.Query("select id, title, created, updated from surveys inner join public.survey_permissions sp on surveys.id = sp.entity_id where sp.user_id = $1 and sp.action = 'read'", userId)
 	if err != nil {
 		log.Panic("Couldn't list surveys", err)
 	}
@@ -34,7 +34,7 @@ func GetSurvey(surveyId int64) Survey {
 	var created string
 	var updated string
 	var blocksOrder []int64
-	err := context.Ctx.Db.QueryRow("select title, created, updated, blocks_order from surveys where id = $1", surveyId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&blocksOrder))
+	err := global.Db.QueryRow("select title, created, updated, blocks_order from surveys where id = $1", surveyId).Scan(&survey.Title, &created, &updated, (*pq.Int64Array)(&blocksOrder))
 	if err != nil {
 		log.Print(err)
 	}
@@ -63,7 +63,7 @@ func GetSurvey(surveyId int64) Survey {
 func CreateSurvey(title string, userId int64) Survey {
 	var survey Survey
 	survey.Title = title
-	err := context.Ctx.Db.QueryRow("insert into surveys (title, created, updated, user_id) values ($1, now(), now(), $2) returning id, created, updated", title, userId).Scan(&survey.Id, &survey.Created, &survey.Updated)
+	err := global.Db.QueryRow("insert into surveys (title, created, updated, user_id) values ($1, now(), now(), $2) returning id, created, updated", title, userId).Scan(&survey.Id, &survey.Created, &survey.Updated)
 	if err != nil {
 		log.Print("Couldn't create survey", err)
 	}
@@ -76,28 +76,28 @@ func CreateSurvey(title string, userId int64) Survey {
 }
 
 func RenameSurvey(surveyId int64, title string) {
-	_, err := context.Ctx.Db.Exec("update surveys set updated = now(), title = $1 where id = $2", title, surveyId)
+	_, err := global.Db.Exec("update surveys set updated = now(), title = $1 where id = $2", title, surveyId)
 	if err != nil {
 		log.Print("Couldn't update survey title", err)
 	}
 }
 
 func DeleteSurvey(surveyId int64, userId int64) {
-	_, err := context.Ctx.Db.Exec("delete from surveys where id = $1 and user_id = $2", surveyId, userId)
+	_, err := global.Db.Exec("delete from surveys where id = $1 and user_id = $2", surveyId, userId)
 	if err != nil {
 		log.Print("Couldn't delete survey", err)
 	}
 }
 
 func ReorderBlock(surveyId int64, blockId int64, index int) {
-	_, err := context.Ctx.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
+	_, err := global.Db.Exec("update surveys set blocks_order = array_remove(blocks_order, $1) where id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	var blocksOrder []int64
-	err = context.Ctx.Db.QueryRow("select blocks_order from surveys where id = $1", surveyId).Scan((*pq.Int64Array)(&blocksOrder))
+	err = global.Db.QueryRow("select blocks_order from surveys where id = $1", surveyId).Scan((*pq.Int64Array)(&blocksOrder))
 	if err != nil {
 		log.Println(err)
 		return
@@ -114,7 +114,7 @@ func ReorderBlock(surveyId int64, blockId int64, index int) {
 		}
 	}
 
-	_, err = context.Ctx.Db.Exec("update surveys set blocks_order = $1, updated = now() where id = $2", pq.Array(newOrder), surveyId)
+	_, err = global.Db.Exec("update surveys set blocks_order = $1, updated = now() where id = $2", pq.Array(newOrder), surveyId)
 	if err != nil {
 		log.Println(err)
 		return
@@ -147,7 +147,7 @@ func (a *Response) Scan(value interface{}) error {
 
 func RecordResponse(surveyId int64, response Response) (int64, error) {
 	var responseId int64
-	err := context.Ctx.Db.QueryRow("insert into responses (survey_id, response) VALUES ($1, $2) returning id", surveyId, response).Scan(&responseId)
+	err := global.Db.QueryRow("insert into responses (survey_id, response) VALUES ($1, $2) returning id", surveyId, response).Scan(&responseId)
 	if err != nil {
 		log.Println(err)
 	}
@@ -156,7 +156,7 @@ func RecordResponse(surveyId int64, response Response) (int64, error) {
 }
 
 func MergeResponse(responseId int64, response Response) error {
-	_, err := context.Ctx.Db.Exec("update responses set response = response || $1 where id = $2", response, responseId)
+	_, err := global.Db.Exec("update responses set response = response || $1 where id = $2", response, responseId)
 	if err != nil {
 		log.Println(err)
 	}
