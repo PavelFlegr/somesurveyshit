@@ -123,12 +123,22 @@ func main() {
 		}
 
 		hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-		err = services.CreateUser(email.Address, string(hash))
+		var id int64
+		id, err = services.CreateUser(email.Address, string(hash))
 		if err != nil {
 			indexTmpl.ExecuteTemplate(w, "error", "An account with this email already exists")
 		}
 
-		w.Header().Set("HX-Redirect", "/login")
+		cookie, _ := context.Ctx.Sc.Encode("userId", id)
+
+		http.SetCookie(w, &http.Cookie{
+			HttpOnly: true,
+			Value:    cookie,
+			Name:     "userId",
+			SameSite: http.SameSiteStrictMode},
+		)
+
+		w.Header().Set("HX-Redirect", "/manage/dashboard")
 	})
 
 	r.Get("/goodbye", func(w http.ResponseWriter, r *http.Request) {

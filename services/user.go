@@ -6,13 +6,14 @@ import (
 	"main/context"
 )
 
-func CreateUser(email string, password string) error {
-	_, err := context.Ctx.Db.Exec("insert into users (email, password) values ($1, $2)", email, password)
+func CreateUser(email string, password string) (int64, error) {
+	var id int64
+	err := context.Ctx.Db.QueryRow("insert into users (email, password) values ($1, $2) returning id", email, password).Scan(&id)
 	if err != nil {
 		log.Println(err)
 	}
 
-	return err
+	return id, err
 }
 
 func GetUserByEmail(email string) (User, error) {
