@@ -1,5 +1,5 @@
+{{define "manage/dashboard.html"}}
 {{template "header" .}}
-{{block "dashboard" .Data}}
 <div class="section container">
     <form class="field" hx-post="/manage/survey" hx-target="tbody" hx-swap="beforeend">
         <span id="error"></span>
@@ -19,8 +19,8 @@
                 <th>Modified</th>
                 <th>Created</th>
             </tr>
-            {{range .}}
-            {{block "surveyItem" .}}
+            {{range .Data}}
+            {{block "manage/survey-item" .}}
             <tr>
                 <td><a href="/manage/survey/{{.Id}}">{{.Title}}</a></td>
                 <td>{{.Created.Format "2. 1. 2006 15:04" }}</td>
@@ -34,5 +34,5 @@
         </tbody>
     </table>
 </div>
-{{end}}
 {{template "footer" .}}
+{{end}}

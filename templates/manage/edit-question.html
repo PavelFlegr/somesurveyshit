@@ -1,3 +1,4 @@
+{{define "manage/edit-question"}}
 <div class="box question">
     <form hx-put="/manage/survey/{{.SurveyId}}/question/{{.Id}}" hx-target="closest .question" hx-swap="outerHTML" hx-vals="js:description:htmx.find(htmx.find('#editor{{.Id}}'), '.ql-editor').innerHTML">
         <progress class="progress is-small is-primary htmx-indicator question-loader m-0" max="100">15%</progress>
@@ -21,7 +22,7 @@
         <p class="subtitle">Question Options</p>
         <div class="field options">
             {{range $option := .Options}}
-            {{block "option" .}}
+            {{block "manage/option" .}}
             <div class="field has-addons option">
                 <span class="icon is-medium drag-handle is-clickable">
                     <i class="mdi mdi-drag-vertical-variant"></i>
@@ -45,4 +46,4 @@
         <a>Add</a>
     </span>
 </div>
-
+{{end}}

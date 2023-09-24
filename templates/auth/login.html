@@ -1,0 +1,77 @@
+{{define "auth/login.html"}}
+{{template "header" .}}
+{{block "auth/login" .Data}}
+<div class="section container">
+    <nav class="panel is-primary">
+        <p class="panel-heading">
+            Login
+        </p>
+        <p class="panel-tabs">
+            <a class="is-active">Login</a>
+            <a hx-get="/register" hx-target="closest div" hx-swap="outerHTML">Register</a>
+        </p>
+        <div class="panel-block is-justify-content-center">
+            <form hx-post="/login" hx-target="find .error">
+                <div class="error"></div>
+                <div class="field">
+                    <label class="control">
+                        <span>Email</span>
+                        <input name="email" class="input">
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="control">
+                        <span>Password</span>
+                        <input name="password" type="password" class="input">
+                    </label>
+                </div>
+                <div class="field">
+                    <button class="button control is-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </nav>
+</div>
+{{end}}
+{{template "footer" .}}
+{{end}}
+
+{{define "auth/register"}}
+<div class="section container">
+    <nav class="panel is-primary">
+        <p class="panel-heading">
+            Register
+        </p>
+        <p class="panel-tabs">
+            <a hx-get="/login" hx-target="closest div" hx-swap="outerHTML">Login</a>
+            <a class="is-active">Register</a>
+        </p>
+        <div class="panel-block is-justify-content-center">
+            <form hx-post="/register" hx-target="find .error">
+                <div class="error"></div>
+                <div class="field">
+                    <label class="control">
+                        <span>Email</span>
+                        <input class="input" name="email">
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="control">
+                        <span>Password</span>
+                        <input type="password" name="password" class="input">
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="control">
+                        <span>Confirm Password</span>
+                        <input type="password" name="password2" class="input">
+                    </label>
+                </div>
+                <div class="field">
+                    <button class="button control is-primary">Register</button>
+                </div>
+            </form>
+        </div>
+    </nav>
+</div>
+{{end}}

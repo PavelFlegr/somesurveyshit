@@ -37,7 +37,8 @@ func main() {
 		"unescape": func(val string) template.HTML {
 			return template.HTML(val)
 		},
-	}).ParseGlob("templates/*")
+	}).ParseGlob("templates/*.html")
+	tmpl, err = tmpl.ParseGlob("templates/*/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}

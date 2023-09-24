@@ -1,6 +1,7 @@
+{{define "manage/survey.html"}}
 {{template "header" .}}
 {{with .Data}}
-{{block "survey" .}}
+{{block "manage/survey" .}}
 <script>
     function findIndex(e) {
         return Array.from(e.parentNode.children).indexOf(e)
@@ -54,7 +55,7 @@
     })
 </script>
 <div class="section container">
-    {{block "navigation" .}}
+    {{block "manage/navigation" .}}
     <div class="block navigation">
         <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
@@ -63,7 +64,7 @@
             </ul>
         </nav>
         <div class="level">
-            {{block "survey-title" .}}
+            {{block "manage/survey-title" .}}
             <div class="level-item level-left">
                 <h1 class="title">
                     <span>Survey {{.Title}}</span>
@@ -78,9 +79,7 @@
     {{end}}
     <div id="blocks">
         {{range $i, $block := .Blocks}}
-        {{block "block" .}}
-        {{template "block.html" .}}
-        {{end}}
+        {{template "manage/block" .}}
         {{end}}
         <button hx-post="/manage/survey/{{.Id}}/block" hx-swap="beforebegin" class="button is-primary is-inverted is-block mx-auto">
             <span class="icon">
@@ -93,3 +92,12 @@
 {{end}}
 {{end}}
 {{template "footer" .}}
+{{end}}
+
+{{define "manage/edit-survey-title"}}
+<form hx-target=".navigation" hax-swap="outerHTML">
+    <input class="input" name="title" value="{{.Title}}">
+    <button hx-put="/manage/survey/{{.Id}}/title" class="button is-primary">Save</button>
+    <button hx-get="/manage/survey/{{.Id}}/title" class="button">Cancel</button>
+</form>
+{{end}}

@@ -18,7 +18,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	surveys := services.ListSurveys(userId)
-	global.Template.ExecuteTemplate(w, "dashboard.html", services.TemplateData{
+	global.Template.ExecuteTemplate(w, "manage/dashboard.html", services.TemplateData{
 		LoggedIn: authErr == nil,
 		Data:     surveys,
 	})
@@ -40,7 +40,7 @@ func AddSurvey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	survey := services.CreateSurvey(title, userId)
-	err := global.Template.ExecuteTemplate(w, "surveyItem", survey)
+	err := global.Template.ExecuteTemplate(w, "manage/survey-item", survey)
 	if err != nil {
 		log.Println(err)
 	}
@@ -63,12 +63,12 @@ func GetSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 	survey := services.GetSurvey(surveyId)
 	if r.Header.Get("Hx-Request") == "true" {
-		err := global.Template.ExecuteTemplate(w, "survey", survey)
+		err := global.Template.ExecuteTemplate(w, "manage/survey", survey)
 		if err != nil {
 			log.Println(err)
 		}
 	} else {
-		err := global.Template.ExecuteTemplate(w, "survey.html", services.TemplateData{
+		err := global.Template.ExecuteTemplate(w, "manage/survey.html", services.TemplateData{
 			LoggedIn: authErr == nil,
 			Data:     survey,
 		})
@@ -105,7 +105,7 @@ func GetSurveyTitle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	survey := services.GetSurvey(surveyId)
-	err := global.Template.ExecuteTemplate(w, "navigation", survey)
+	err := global.Template.ExecuteTemplate(w, "manage/navigation", survey)
 	if err != nil {
 		log.Println(err)
 	}
@@ -126,7 +126,10 @@ func PutSurveyTitle(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	services.RenameSurvey(surveyId, title)
 
-	global.Template.ExecuteTemplate(w, "navigation", services.Survey{Id: surveyId, Title: title})
+	err := global.Template.ExecuteTemplate(w, "manage/navigation", services.Survey{Id: surveyId, Title: title})
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func GetSurveyTitleEdit(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +145,7 @@ func GetSurveyTitleEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	survey := services.GetSurvey(surveyId)
-	err := global.Template.ExecuteTemplate(w, "edit-survey-title", survey)
+	err := global.Template.ExecuteTemplate(w, "manage/edit-survey-title", survey)
 	if err != nil {
 		log.Println(err)
 	}
@@ -198,5 +201,8 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 
 func GetEmptyOption(w http.ResponseWriter, r *http.Request) {
 	option := services.Option{}
-	global.Template.ExecuteTemplate(w, "option", option)
+	err := global.Template.ExecuteTemplate(w, "manage/option", option)
+	if err != nil {
+		log.Println(err)
+	}
 }

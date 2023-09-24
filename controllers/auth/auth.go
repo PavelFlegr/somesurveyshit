@@ -2,6 +2,7 @@ package auth
 
 import (
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"main/global"
 	"main/services"
 	"net/http"
@@ -11,12 +12,19 @@ import (
 func GetLogin(w http.ResponseWriter, r *http.Request) {
 	_, authErr := global.CheckAuth(r)
 	if r.Header.Get("Hx-Request") == "true" {
-		global.Template.ExecuteTemplate(w, "login", nil)
+		err := global.Template.ExecuteTemplate(w, "auth/login", nil)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
-	global.Template.ExecuteTemplate(w, "login.html", services.TemplateData{
+	err := global.Template.ExecuteTemplate(w, "auth/login.html", services.TemplateData{
 		LoggedIn: authErr == nil,
 	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -24,13 +32,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	password := r.PostFormValue("password")
 	user, err := services.GetUserByEmail(email)
 	if err != nil {
-		global.Template.ExecuteTemplate(w, "error", "Account with this email does not exist")
+		err := global.Template.ExecuteTemplate(w, "error", "Account with this email does not exist")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		global.Template.ExecuteTemplate(w, "error", "Password is incorrect")
+		err := global.Template.ExecuteTemplate(w, "error", "Password is incorrect")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -47,7 +61,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRegister(w http.ResponseWriter, r *http.Request) {
-	global.Template.ExecuteTemplate(w, "register", nil)
+	err := global.Template.ExecuteTemplate(w, "auth/register", nil)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +82,10 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func Register(w http.ResponseWriter, r *http.Request) {
 	email, err := mail.ParseAddress(r.PostFormValue("email"))
 	if err != nil {
-		global.Template.ExecuteTemplate(w, "error", "Invalid email address")
+		err := global.Template.ExecuteTemplate(w, "error", "Invalid email address")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -73,12 +93,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	password2 := r.PostFormValue("password2")
 
 	if len(password) < 5 {
-		global.Template.ExecuteTemplate(w, "error", "Password must be at least 5 characters long")
+		err := global.Template.ExecuteTemplate(w, "error", "Password must be at least 5 characters long")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
 	if password != password2 {
-		global.Template.ExecuteTemplate(w, "error", "Passwords don't match")
+		err := global.Template.ExecuteTemplate(w, "error", "Passwords don't match")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -86,7 +112,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var id int64
 	id, err = services.CreateUser(email.Address, string(hash))
 	if err != nil {
-		global.Template.ExecuteTemplate(w, "error", "An account with this email already exists")
+		err := global.Template.ExecuteTemplate(w, "error", "An account with this email already exists")
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	cookie, _ := global.Sc.Encode("userId", id)

@@ -28,7 +28,7 @@ func ReorderQuestion(w http.ResponseWriter, r *http.Request) {
 	services.ReorderQuestion(surveyId, questionId, blockId, index)
 	question := services.GetQuestion(surveyId, questionId)
 
-	err := global.Template.ExecuteTemplate(w, "question.html", question)
+	err := global.Template.ExecuteTemplate(w, "manage/question", question)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -56,7 +56,7 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 		services.ReorderQuestion(surveyId, question.Id, blockId, index)
 	}
 
-	err = global.Template.ExecuteTemplate(w, "edit-question.html", question)
+	err = global.Template.ExecuteTemplate(w, "manage/edit-question", question)
 	if err != nil {
 		log.Println(err)
 	}
@@ -77,7 +77,7 @@ func GetQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	question := services.GetQuestion(surveyId, questionId)
 
-	err := global.Template.ExecuteTemplate(w, "question.html", question)
+	err := global.Template.ExecuteTemplate(w, "manage/question", question)
 	if err != nil {
 		log.Println(err)
 	}
@@ -111,7 +111,7 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	services.UpdateQuestion(surveyId, question)
 
-	err := global.Template.ExecuteTemplate(w, "question.html", question)
+	err := global.Template.ExecuteTemplate(w, "manage/question", question)
 	if err != nil {
 		log.Println(err)
 	}
@@ -148,7 +148,7 @@ func GetQuestionEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	question := services.GetQuestion(surveyId, questionId)
 
-	err := global.Template.ExecuteTemplate(w, "edit-question.html", question)
+	err := global.Template.ExecuteTemplate(w, "manage/edit-question", question)
 	if err != nil {
 		log.Println(err)
 	}

@@ -28,7 +28,7 @@ func PutBlockTitle(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	block, _ := services.GetBlock(blockId, surveyId)
-	err = global.Template.ExecuteTemplate(w, "block-title", block)
+	err = global.Template.ExecuteTemplate(w, "manage/block-title", block)
 	if err != nil {
 		log.Println(err)
 	}
@@ -48,7 +48,7 @@ func GetBlockTitle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	block, _ := services.GetBlock(blockId, surveyId)
-	err := global.Template.ExecuteTemplate(w, "block-title", block)
+	err := global.Template.ExecuteTemplate(w, "manage/block-title", block)
 	if err != nil {
 		log.Println(err)
 	}
@@ -68,7 +68,7 @@ func GetBlockTitleEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	block, _ := services.GetBlock(blockId, surveyId)
-	err := global.Template.ExecuteTemplate(w, "edit-block-title", block)
+	err := global.Template.ExecuteTemplate(w, "manage/edit-block-title", block)
 	if err != nil {
 		log.Println(err)
 	}
@@ -121,7 +121,7 @@ func CreateBlock(w http.ResponseWriter, r *http.Request) {
 		services.ReorderBlock(surveyId, block.Id, index)
 	}
 
-	err = global.Template.ExecuteTemplate(w, "block", block)
+	err = global.Template.ExecuteTemplate(w, "manage/block", block)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -149,7 +149,7 @@ func ListQuestions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = global.Template.ExecuteTemplate(w, "questions", survey.Questions)
+	err = global.Template.ExecuteTemplate(w, "manage/questions", survey.Questions)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

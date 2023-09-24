@@ -32,7 +32,7 @@ func GetSurvey(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = global.Template.ExecuteTemplate(w, "user-survey.html", page)
+	err = global.Template.ExecuteTemplate(w, "answer/survey.html", page)
 	if err != nil {
 		log.Println(err)
 	}
@@ -91,7 +91,7 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 
 	if page.Page < int64(len(page.Survey.Blocks)) {
 		page.Block, err = services.GetBlock(page.Survey.Blocks[page.Page].Id, surveyId)
-		err := global.Template.ExecuteTemplate(w, "user-survey.html", page)
+		err := global.Template.ExecuteTemplate(w, "answer/survey.html", page)
 		if err != nil {
 			log.Println(err)
 		}
@@ -102,7 +102,7 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShowGoodbye(w http.ResponseWriter, r *http.Request) {
-	err := global.Template.ExecuteTemplate(w, "goodbye.html", nil)
+	err := global.Template.ExecuteTemplate(w, "answer/goodbye.html", nil)
 	if err != nil {
 		log.Println(err)
 	}
