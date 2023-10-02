@@ -6,6 +6,15 @@ import (
 	"main/global"
 )
 
+func CountBlocks(surveyId int64) int64 {
+	var count int64
+	err := global.Db.QueryRow("select count(1) from blocks where survey_id = $1", surveyId).Scan(&count)
+	if err != nil {
+		log.Println(err)
+	}
+	return count
+}
+
 func CreateBlock(block *Block, userId int64) error {
 	var err = global.Db.QueryRow("insert into blocks (user_id, survey_id, title, created) values ($1, $2, $3, now()) returning id", userId, block.SurveyId, block.Title).Scan(&block.Id)
 	if err != nil {

@@ -1,6 +1,7 @@
 package block
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"log"
 	"main/global"
@@ -104,8 +105,9 @@ func CreateBlock(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+	blockCount := services.CountBlocks(surveyId)
 	block := services.Block{
-		Title:    "New Block",
+		Title:    fmt.Sprintf("Block %v", blockCount+1),
 		SurveyId: surveyId,
 	}
 	err := services.CreateBlock(&block, userId)

@@ -1,18 +1,19 @@
 {{define "manage/block"}}
-<div class="block">
+<div class="survey-block is-relative">
     <form hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/reorder" hx-trigger="reorder" hx-swap="none">
         <input type="hidden" name="index">
     </form>
-    <div class="is-flex is-justify-content-center">
-        <button hx-post="/manage/survey/{{.SurveyId}}/block" hx-vals="js:index:findIndex(htmx.closest(event.target, '.block'))" hx-target="closest .block" hx-swap="beforebegin" class="button is-primary is-inverted">
-            <span class="icon">
-                <span class="mdi mdi-plus"></span>
-            </span>
-            <span>Add block</span>
-        </button>
-    </div>
-    <div class="card">
-        <header _="on click toggle .collapsed on next .card-content" class="card-header is-clickable drag-handle">
+    <a hx-post="/manage/survey/{{.SurveyId}}/block" hx-vals="js:index:findIndex(htmx.closest(event.target, '.survey-block'))" hx-target="closest .survey-block" hx-swap="beforebegin" class="is-icon has-text-primary is-decorator is-top">
+        <span class="mdi mdi-plus-circle"></span>
+    </a>
+    <a hx-delete="/manage/survey/{{.SurveyId}}/block/{{.Id}}" hx-target="closest .survey-block" hx-swap="delete" class="is-icon has-text-danger is-decorator is-middle">
+        <span class="mdi mdi-minus-circle"></span>
+    </a>
+    <a hx-post="/manage/survey/{{.SurveyId}}/block" hx-vals="js:index:findIndex(htmx.closest(event.target, '.survey-block'))+1" hx-target="closest .survey-block" hx-swap="afterend" class="is-icon has-text-primary is-decorator is-bottom if-last">
+        <span class="mdi mdi-plus-circle"></span>
+    </a>
+    <div class="card is-radiusless">
+        <header _="on click toggle .collapsed on next .card-content" class="card-header has-background-light is- is-clickable drag-handle">
             <span class="card-header-title">
                 <span class="subtitle is-flex">
                     <span class="icon is-align-self-center">
@@ -28,38 +29,15 @@
                     </span>
                 </span>
             </span>
-            <div class="dropdown is-hoverable card-header-icon">
-                <div class="dropdown-trigger">
-                    <button type="button" class="button is-text" aria-haspopup="true" aria-controls="dropdown-menu">
-                    <span class="icon is-medium">
-                        <span class="mdi mdi-dots-vertical"></span>
-                    </span>
-                    </button>
-                </div>
-                <div class="dropdown-menu" role="menu">
-                    <div class="dropdown-content">
-                        <button class="button is-danger is-inverted dropdown-item"
-                                hx-delete="/manage/survey/{{.SurveyId}}/block/{{.Id}}"
-                                hx-target="closest .block"
-                                hx-swap="remove"
-                                _="on htmx:confirm(issueRequest) halt the event call Swal.fire({title: 'Are you sure you want to delete this block?', showCancelButton: true})
-                               if result.isConfirmed issueRequest()"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
         </header>
         <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="afterbegin" hx-target="find .questions" class="card-content collapsed">
-            <div class="questions" data-blockid="{{.Id}}">
-                <button hx-target="this" hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-swap="beforebegin" class="button is-primary is-inverted mx-auto is-block">
+            <div class="questions" data-blockid="{{.Id}}"></div>
+            <button hx-target="previous .questions" hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-swap="beforeend" class="button is-primary is-inverted mx-auto is-block mt-5">
                     <span class="icon">
                         <span class="mdi mdi-plus"></span>
                     </span>
-                    <span>Add question</span>
-                </button>
-            </div>
+                <span>Add question</span>
+            </button>
         </div>
     </div>
 </div>

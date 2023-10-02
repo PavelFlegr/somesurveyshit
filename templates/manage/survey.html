@@ -16,31 +16,31 @@
             Sortable.create(options, {
                 handle: '.drag-handle',
                 animation: 100,
-                invertSwap: true,
             })
         }
-        Sortable.create(htmx.find('#blocks'), {
-            handle: '.drag-handle',
-            filter: 'input',
-            animation: 100,
-            invertSwap: true,
-            preventOnFilter: false,
-            onEnd: e => {
-                if (e.newIndex === e.oldIndex) {
-                    return
+        const blocks = htmx.find(el, '#blocks')
+        if (blocks) {
+            Sortable.create(blocks, {
+                handle: '.drag-handle',
+                filter: 'input',
+                animation: 100,
+                preventOnFilter: false,
+                onEnd: e => {
+                    if (e.newIndex === e.oldIndex) {
+                        return
+                    }
+                    htmx.find(e.item, 'input[name=index]').value = e.newIndex
+                    htmx.trigger(htmx.find(e.item, 'form'), 'reorder')
+                },
+                onStart: e => {
+                    htmx.find(e.item, '.card-content').classList.add('collapsed')
                 }
-                htmx.find(e.item, 'input[name=index]').value = e.newIndex
-                htmx.trigger(htmx.find(e.item, 'form'), 'reorder')
-            },
-            onStart: e => {
-                htmx.find(e.item, '.card-content').classList.add('collapsed')
-            }
-        })
+            })
+        }
         for (let questions of htmx.findAll(el, '.questions')) {
             Sortable.create(questions, {
                 group: 'questions',
                 animation: 100,
-                invertSwap: true,
                 handle: '.drag-handle',
                 onEnd: (e) => {
                     if (e.newIndex === e.oldIndex && e.to.dataset.blockid === e.from.dataset.blockId) {
@@ -81,13 +81,14 @@
         {{range $i, $block := .Blocks}}
         {{template "manage/block" .}}
         {{end}}
-        <button hx-post="/manage/survey/{{.Id}}/block" hx-swap="beforebegin" class="button is-primary is-inverted is-block mx-auto">
+    </div>
+    <div class="space"></div>
+    <button hx-post="/manage/survey/{{.Id}}/block" hx-target="#blocks" hx-swap="beforeend" class="button is-primary is-inverted is-block mx-auto mt-5">
             <span class="icon">
                 <span class="mdi mdi-plus"></span>
             </span>
-            <span>Add block</span>
-        </button>
-    </div>
+        <span>Add block</span>
+    </button>
 </div>
 {{end}}
 {{end}}

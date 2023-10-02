@@ -1,60 +1,41 @@
 {{define "manage/question"}}
 <div class="question block">
-    <div class="is-flex is-justify-content-center">
-        <button hx-post="/manage/survey/{{.SurveyId}}/block/{{.BlockId}}/question" hx-target="closest .question" hx-swap="beforebegin" hx-vals="js:index:findIndex(htmx.closest(event.target, '.question'))" class="button is-primary is-inverted">
-            <span class="icon">
-                <span class="mdi mdi-plus"></span>
-            </span>
-            <span>Add question</span>
-        </button>
-    </div>
     <form hx-post="/manage/survey/{{.SurveyId}}/question/{{.Id}}/reorder" hx-target="closest .question" hx-trigger="reorder" hx-swap="outerHTML">
         <input type="hidden" name="index">
         <input type="hidden" name="blockId">
     </form>
-    <div class="has-background-info pb-3 is-clickable drag-handle"></div>
-    <div class="box">
-        <div class="level">
-            <div class="level-item level-left">
-                <div class="subtitle">{{.Title}}</div>
-            </div>
-            <div class="level-item level-right">
-                <div class="dropdown is-hoverable">
-                    <div class="dropdown-trigger">
-                        <button type="button" class="button is-text" aria-haspopup="true" aria-controls="dropdown-menu">
-                        <span class="icon is-medium question-menu">
-                            <span class="mdi mdi-dots-vertical"></span>
-                        </span>
-                        </button>
-                    </div>
-                    <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                        <div class="dropdown-content">
-                            <button class="button is-link is-inverted dropdown-item" hx-get="/manage/survey/{{.SurveyId}}/question/{{.Id}}/edit" hx-target="closest .question" hx-swap="outerHTML">
-                                Edit
-                            </button>
-                            <button class="button is-danger is-inverted dropdown-item"
-                                    hx-delete="/manage/survey/{{.SurveyId}}/question/{{.Id}}"
-                                    hx-target="closest .question"
-                                    hx-swap="outerHTML"
-                                    _="on htmx:confirm(issueRequest) halt the event call Swal.fire({title: 'Are you sure you want to delete this question?', showCancelButton: true})
-                                   if result.isConfirmed issueRequest()"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+    <div class="is-relative">
+        <a hx-post="/manage/survey/{{.SurveyId}}/block/{{.BlockId}}/question" hx-target="closest .question" hx-swap="beforebegin" hx-vals="js:index:findIndex(htmx.closest(event.target, '.question'))" class="is-icon has-text-primary is-decorator is-top">
+            <span class="mdi mdi-plus-circle"></span>
+        </a>
+        <a hx-delete="/manage/survey/{{.SurveyId}}/question/{{.Id}}" hx-target="closest .question" hx-swap="delete" class="is-icon has-text-danger is-decorator is-middle">
+            <span class="mdi mdi-minus-circle"></span>
+        </a>
+        <a hx-post="/manage/survey/{{.SurveyId}}/block/{{.BlockId}}/question" hx-vals="js:index:findIndex(htmx.closest(event.target, '.question'))+1" hx-target="closest .question" hx-swap="afterend" class="is-icon has-text-primary is-decorator is-bottom if-last">
+            <span class="mdi mdi-plus-circle"></span>
+        </a>
+        <div class="has-background-info pb-3 is-clickable drag-handle"></div>
+        <div class="box">
+            <div class="level">
+                <div class="level-item level-left">
+                    <div class="subtitle">{{.Title}}</div>
+                </div>
+                <div class="level-item level-right">
+                    <button class="button is-link is-inverted" hx-get="/manage/survey/{{.SurveyId}}/question/{{.Id}}/edit" hx-target="closest .question" hx-swap="outerHTML">
+                        Edit
+                    </button>
                 </div>
             </div>
+            <div class="content">{{ unescape .Description }}</div>
+            {{range $option := .Options}}
+            <div>
+                <label class="radio is-unselectable">
+                    <input type="radio" name="option">
+                    {{.Label}}
+                </label>
+            </div>
+            {{end}}
         </div>
-        <div class="content">{{ unescape .Description }}</div>
-        {{range $option := .Options}}
-        <div>
-            <label class="radio is-unselectable">
-                <input type="radio" name="option">
-                {{.Label}}
-            </label>
-        </div>
-        {{end}}
     </div>
 </div>
 {{end}}

@@ -109,7 +109,7 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 		Options:     options,
 		SurveyId:    surveyId,
 	}
-	services.UpdateQuestion(surveyId, question)
+	services.UpdateQuestion(surveyId, &question)
 
 	err := global.Template.ExecuteTemplate(w, "manage/question", question)
 	if err != nil {
