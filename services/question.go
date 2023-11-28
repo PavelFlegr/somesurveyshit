@@ -78,6 +78,7 @@ func CreateQuestion(surveyId int64, userId int64, blockId int64, configuration C
 	question.Title = fmt.Sprintf("Question %v", questionCount+1)
 	question.SurveyId = surveyId
 	question.BlockId = blockId
+	question.Configuration = configuration
 	err := global.Db.QueryRow("insert into questions (survey_id, title, user_id, block_id, configuration) values ($1, $2, $3, $4, $5) returning id", surveyId, question.Title, userId, blockId, configuration).Scan(&question.Id)
 	if err != nil {
 		log.Print(err)

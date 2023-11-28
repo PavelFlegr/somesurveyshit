@@ -1,4 +1,4 @@
-drop table if exists users cascade;
+/*drop table if exists users cascade;*/
 drop table if exists surveys cascade;
 drop table if exists blocks cascade;
 drop table if exists questions cascade;
