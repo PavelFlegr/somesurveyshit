@@ -19,31 +19,40 @@
             </div>
         </div>
         <div class="field editor" id="editor{{.Id}}">{{ unescape .Description }}</div>
-        <p class="subtitle">Question Options</p>
-        <div class="field options">
-            {{range $option := .Options}}
-            {{block "manage/option" .}}
-            <div class="field has-addons option">
-                <span class="icon is-medium drag-handle is-clickable">
-                    <i class="mdi mdi-drag-vertical-variant"></i>
-                </span>
-                <div class="control">
-                    <input placeholder="An Amazing option" class="input is-small" name="option" value="{{.Label}}">
+        <p class="subtitle">Question Configuration</p>
+        <div class="select mb-3">
+            <select name="questionType" onchange="switchQuestionType(this)">
+                <option value="description" {{ if eq .Configuration.QuestionType "description" }} selected {{ end }}>Description</option>
+                <option value="single" {{ if eq .Configuration.QuestionType "single" }} selected {{ end }}>Single Choice</option>
+                <option value="multiple" {{ if eq .Configuration.QuestionType "multiple" }} selected {{ end }}>Multiple Choice</option>
+            </select>
+        </div>
+        <div class='options-wrapper {{ if eq .Configuration.QuestionType "description" }} is-hidden {{end}}'>
+            <div class="field options">
+                {{range $option := .Configuration.Options}}
+                {{block "manage/option" .}}
+                <div class="field has-addons option">
+                    <span class="icon is-medium drag-handle is-clickable">
+                        <i class="mdi mdi-drag-vertical-variant"></i>
+                    </span>
+                    <div class="control">
+                        <input placeholder="An Amazing option" class="input is-small" name="option" value="{{.Label}}">
+                    </div>
+    
+                    <div class="control">
+                        <button _="on click remove closest .option" class="button is-danger is-small"> <span class="mdi mdi-trash-can-outline"></span></button>
+                    </div>
                 </div>
-
-                <div class="control">
-                    <button _="on click remove closest .option" class="button is-danger is-small"> <span class="mdi mdi-trash-can-outline"></span></button>
-                </div>
+                {{end}}
+                {{end}}
             </div>
-            {{end}}
-            {{end}}
+            <span class="is-clickable" hx-get="/manage/option" hx-target="previous .options" hx-swap="beforeend">
+                <span class="icon is-medium">
+                    <span class="mdi mdi-plus"></span>
+                </span>
+                <a>Add</a>
+            </span>
         </div>
     </form>
-    <span class="is-clickable" hx-get="/manage/option" hx-target="previous .options" hx-swap="beforeend">
-        <span class="icon is-medium">
-            <span class="mdi mdi-plus"></span>
-        </span>
-        <a>Add</a>
-    </span>
 </div>
 {{end}}

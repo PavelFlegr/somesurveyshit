@@ -27,13 +27,23 @@
                 </div>
             </div>
             <div class="content">{{ unescape .Description }}</div>
-            {{range $option := .Options}}
+            {{range $option := .Configuration.Options}}
+            {{ if eq $.Configuration.QuestionType "single" }}
             <div>
                 <label class="radio is-unselectable">
                     <input type="radio" name="option">
                     {{.Label}}
                 </label>
             </div>
+            {{end}}
+            {{ if eq $.Configuration.QuestionType "multiple" }}
+            <div>
+                <label class="checkbox is-unselectable">
+                    <input type="checkbox" name="option">
+                    {{.Label}}
+                </label>
+            </div>
+            {{end}}
             {{end}}
         </div>
     </div>

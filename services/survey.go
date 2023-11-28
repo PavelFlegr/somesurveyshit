@@ -4,10 +4,11 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"github.com/lib/pq"
 	"log"
 	"main/global"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 func ListSurveys(userId int64) []Survey {
@@ -121,7 +122,7 @@ func ReorderBlock(surveyId int64, blockId int64, index int) {
 	}
 }
 
-type Response map[string]string
+type Response map[string][]string
 
 func (a Response) Value() (driver.Value, error) {
 	return json.Marshal(a)
@@ -132,7 +133,7 @@ func (a *Response) Scan(value interface{}) error {
 	if !ok {
 		return errors.New("type assertion []byte failed")
 	}
-	x := make(map[string]string)
+	x := make(map[string][]string)
 	if err := json.Unmarshal(b, &x); err != nil {
 		return err
 	}

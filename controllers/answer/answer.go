@@ -1,12 +1,13 @@
 package answer
 
 import (
-	"github.com/go-chi/chi/v5"
 	"log"
 	"main/global"
 	"main/services"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type SurveyPage struct {
@@ -58,8 +59,12 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 		}
 		questionId, _ := strconv.ParseInt(k, 10, 0)
 		question := services.GetQuestion(surveyId, questionId)
-		answerIndex, _ := strconv.ParseInt(v[0], 10, 0)
-		response[k] = question.Options[answerIndex].Label
+		answers := []string{}
+		for _, answer := range v {
+			answerIndex, _ := strconv.ParseInt(answer, 10, 0)
+			answers = append(answers, question.Configuration.Options[answerIndex].Label)
+		}
+		response[k] = answers
 	}
 
 	var responseId int64

@@ -2,13 +2,14 @@ package survey
 
 import (
 	"encoding/csv"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"main/global"
 	"main/services"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +188,8 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 
 		record = []string{}
 		for _, questionId := range questionIds {
-			record = append(record, response[questionId])
+			answers := strings.Join(response[questionId], ",")
+			record = append(record, answers)
 		}
 		err = csvWriter.Write(record)
 		if err != nil {

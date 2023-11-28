@@ -8,13 +8,23 @@
             </div>
         </div>
         <div class="content">{{ unescape .Description }}</div>
-        {{range $i, $option := .Options}}
+        {{range $i, $option := .Configuration.Options}}
+        {{ if eq $.Configuration.QuestionType "single" }}
         <div>
             <label class="radio is-unselectable">
                 <input type="radio" name="{{$.Id}}" value="{{$i}}">
-                {{$option.Label}}
+                {{.Label}}
             </label>
         </div>
+        {{end}}
+        {{ if eq $.Configuration.QuestionType "multiple" }}
+        <div>
+            <label class="checkbox is-unselectable">
+                <input type="checkbox" name="{{$.Id}}" value="{{$i}}">
+                {{.Label}}
+            </label>
+        </div>
+        {{end}}
         {{end}}
     </div>
 </div>

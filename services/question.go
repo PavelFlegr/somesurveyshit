@@ -2,9 +2,10 @@ package services
 
 import (
 	"fmt"
-	"github.com/lib/pq"
 	"log"
 	"main/global"
+
+	"github.com/lib/pq"
 )
 
 func CountQuestions(surveyId int64) int64 {
@@ -18,7 +19,7 @@ func CountQuestions(surveyId int64) int64 {
 }
 
 func ListQuestions(surveyId int64, blockId int64) ([]Question, error) {
-	rows, err := global.Db.Query("select id, description, title, options, survey_id, block_id from questions where block_id = $1 and survey_id = $2", blockId, surveyId)
+	rows, err := global.Db.Query("select id, description, title, configuration, survey_id, block_id from questions where block_id = $1 and survey_id = $2", blockId, surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -27,7 +28,7 @@ func ListQuestions(surveyId int64, blockId int64) ([]Question, error) {
 	questions := []Question{}
 	for rows.Next() {
 		var question Question
-		err = rows.Scan(&question.Id, &question.Description, &question.Title, &question.Options, &question.SurveyId, &question.BlockId)
+		err = rows.Scan(&question.Id, &question.Description, &question.Title, &question.Configuration, &question.SurveyId, &question.BlockId)
 		if err != nil {
 			log.Print(err)
 			return questions, err
@@ -39,7 +40,7 @@ func ListQuestions(surveyId int64, blockId int64) ([]Question, error) {
 }
 
 func ListQuestionsBySurvey(surveyId int64) ([]Question, error) {
-	rows, err := global.Db.Query("select id, description, title, options, survey_id, block_id from questions where survey_id = $1", surveyId)
+	rows, err := global.Db.Query("select id, description, title, configuration, survey_id, block_id from questions where survey_id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -48,7 +49,7 @@ func ListQuestionsBySurvey(surveyId int64) ([]Question, error) {
 	var questions []Question
 	for rows.Next() {
 		var question Question
-		err = rows.Scan(&question.Id, &question.Description, &question.Title, &question.Options, &question.SurveyId, &question.BlockId)
+		err = rows.Scan(&question.Id, &question.Description, &question.Title, &question.Configuration, &question.SurveyId, &question.BlockId)
 		if err != nil {
 			log.Println(err)
 			return questions, err
@@ -63,7 +64,7 @@ func GetQuestion(surveyId int64, questionId int64) Question {
 	var question Question
 	question.Id = questionId
 	question.SurveyId = surveyId
-	err := global.Db.QueryRow("select description, title, options, block_id from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&question.Description, &question.Title, &question.Options, &question.BlockId)
+	err := global.Db.QueryRow("select description, title, configuration, block_id from questions where id = $1 and survey_id = $2", questionId, surveyId).Scan(&question.Description, &question.Title, &question.Configuration, &question.BlockId)
 	if err != nil {
 		log.Print(err)
 	}
@@ -71,13 +72,13 @@ func GetQuestion(surveyId int64, questionId int64) Question {
 	return question
 }
 
-func CreateQuestion(surveyId int64, userId int64, blockId int64) Question {
+func CreateQuestion(surveyId int64, userId int64, blockId int64, configuration Configuration) Question {
 	questionCount := CountQuestions(surveyId)
 	var question Question
 	question.Title = fmt.Sprintf("Question %v", questionCount+1)
 	question.SurveyId = surveyId
 	question.BlockId = blockId
-	err := global.Db.QueryRow("insert into questions (survey_id, title, user_id, block_id) values ($1, $2, $3, $4) returning id", surveyId, question.Title, userId, blockId).Scan(&question.Id)
+	err := global.Db.QueryRow("insert into questions (survey_id, title, user_id, block_id, configuration) values ($1, $2, $3, $4, $5) returning id", surveyId, question.Title, userId, blockId, configuration).Scan(&question.Id)
 	if err != nil {
 		log.Print(err)
 	}
@@ -94,7 +95,7 @@ func CreateQuestion(surveyId int64, userId int64, blockId int64) Question {
 }
 
 func UpdateQuestion(surveyId int64, question *Question) {
-	err := global.Db.QueryRow("update questions set title = $1, description = $2, options = $3 where id = $4 and survey_id = $5 returning block_id", question.Title, question.Description, question.Options, question.Id, surveyId).Scan(&question.BlockId)
+	err := global.Db.QueryRow("update questions set title = $1, description = $2, configuration = $3 where id = $4 and survey_id = $5 returning block_id", question.Title, question.Description, question.Configuration, question.Id, surveyId).Scan(&question.BlockId)
 	if err != nil {
 		log.Println(err)
 	}

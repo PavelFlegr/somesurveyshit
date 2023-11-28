@@ -40,7 +40,7 @@ create table questions (
     block_id int not null,
     title varchar(255) default('') not null,
     description text default('') not null,
-    options jsonb default('[]'::json) not null,
+    configuration jsonb default('{}'::json) not null,
     constraint fk_user foreign key(user_id) references users(id) on delete cascade,
     constraint fk_survey foreign key(survey_id) references surveys(id) on delete cascade,
     constraint fk_block foreign key(block_id) references blocks(id) on delete cascade

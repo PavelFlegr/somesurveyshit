@@ -3,9 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/securecookie"
-	_ "github.com/lib/pq"
 	"html/template"
 	"log"
 	"main/controllers/answer"
@@ -18,6 +15,10 @@ import (
 	"main/services"
 	"net/http"
 	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/securecookie"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -61,7 +62,7 @@ func main() {
 
 	RegisterRoutes(r)
 
-	err = http.ListenAndServe(fmt.Sprintf(":%v", port), r)
+	err = http.ListenAndServe(fmt.Sprintf("127.0.0.1:%v", port), r)
 	if err != nil {
 		log.Println(err)
 	}

@@ -1,12 +1,13 @@
 package question
 
 import (
-	"github.com/go-chi/chi/v5"
 	"log"
 	"main/global"
 	"main/services"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func ReorderQuestion(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,11 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-	question := services.CreateQuestion(surveyId, userId, blockId)
+	configuration := services.Configuration{
+		QuestionType: "description",
+		Options:      []services.Option{},
+	}
+	question := services.CreateQuestion(surveyId, userId, blockId, configuration)
 
 	index, err := strconv.Atoi(r.PostFormValue("index"))
 	if err == nil {
@@ -98,6 +103,7 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	title := r.FormValue("title")
 	description := r.FormValue("description")
+	questionType := r.FormValue("questionType")
 	var options []services.Option
 	for _, option := range r.PostForm["option"] {
 		options = append(options, services.Option{Label: option})
@@ -106,8 +112,11 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 		Id:          questionId,
 		Title:       title,
 		Description: description,
-		Options:     options,
-		SurveyId:    surveyId,
+		Configuration: services.Configuration{
+			QuestionType: questionType,
+			Options:      options,
+		},
+		SurveyId: surveyId,
 	}
 	services.UpdateQuestion(surveyId, &question)
 

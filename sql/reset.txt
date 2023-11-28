@@ -1,1 +1,1 @@
-psql -U postgres -d y -f .\question.sql
+psql -U postgres -d survey -f .\question.sql

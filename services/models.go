@@ -38,29 +38,32 @@ type Block struct {
 }
 
 type Question struct {
-	Id          int64
-	Title       string
-	Description string
-	SurveyId    int64
-	BlockId     int64
-	Options     OptionsSlice
+	Id            int64
+	Title         string
+	Description   string
+	SurveyId      int64
+	BlockId       int64
+	Configuration Configuration
+}
+
+type Configuration struct {
+	Options      []Option
+	QuestionType string `json:questionType`
 }
 
 type Option struct {
 	Label string `json:label`
 }
 
-type OptionsSlice []Option
-
-func (option OptionsSlice) Value() (driver.Value, error) {
-	return json.Marshal(option)
+func (configuration Configuration) Value() (driver.Value, error) {
+	return json.Marshal(configuration)
 }
 
-func (option *OptionsSlice) Scan(value interface{}) error {
+func (configuration *Configuration) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
 	}
 
-	return json.Unmarshal(b, &option)
+	return json.Unmarshal(b, &configuration)
 }
