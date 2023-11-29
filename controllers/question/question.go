@@ -104,6 +104,7 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 	questionType := r.FormValue("questionType")
+	randomize := r.FormValue("randomize") == "true"
 	var options []services.Option
 	for _, option := range r.PostForm["option"] {
 		options = append(options, services.Option{Label: option})
@@ -114,6 +115,7 @@ func PutQuestion(w http.ResponseWriter, r *http.Request) {
 		Description: description,
 		Configuration: services.Configuration{
 			QuestionType: questionType,
+			Randomize:    randomize,
 			Options:      options,
 		},
 		SurveyId: surveyId,

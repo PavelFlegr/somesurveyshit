@@ -1,9 +1,10 @@
 package services
 
 import (
-	"github.com/lib/pq"
 	"log"
 	"main/global"
+
+	"github.com/lib/pq"
 )
 
 func CountBlocks(surveyId int64) int64 {
@@ -31,7 +32,7 @@ func CreateBlock(block *Block, userId int64) error {
 }
 
 func ListBlocks(surveyId int64) ([]Block, error) {
-	var rows, err = global.Db.Query("select id, title from blocks where survey_id = $1", surveyId)
+	var rows, err = global.Db.Query("select id, title, randomize from blocks where survey_id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -40,7 +41,7 @@ func ListBlocks(surveyId int64) ([]Block, error) {
 	var blocks []Block
 	for rows.Next() {
 		var block = Block{SurveyId: surveyId}
-		err = rows.Scan(&block.Id, &block.Title)
+		err = rows.Scan(&block.Id, &block.Title, &block.Randomize)
 		if err != nil {
 			log.Println(err)
 			return nil, err
@@ -55,7 +56,7 @@ func ListBlocks(surveyId int64) ([]Block, error) {
 func GetBlock(blockId int64, surveyId int64) (Block, error) {
 	block := Block{Id: blockId}
 	var questionsOrder []int64
-	var err = global.Db.QueryRow("select id, survey_id, title, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(&block.Id, &block.SurveyId, &block.Title, (*pq.Int64Array)(&questionsOrder))
+	var err = global.Db.QueryRow("select id, survey_id, title, randomize, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(&block.Id, &block.SurveyId, &block.Title, &block.Randomize, (*pq.Int64Array)(&questionsOrder))
 	if err != nil {
 		log.Println(err)
 		return block, err
@@ -99,9 +100,12 @@ func RemoveBlock(surveyId int64, blockId int64) error {
 
 func RenameBlock(blockId int64, surveyId int64, title string) error {
 	_, err := global.Db.Exec("update blocks set title = $1 where id = $2 and survey_id = $3", title, blockId, surveyId)
-	if err != nil {
-		log.Println(err)
-	}
+
+	return err
+}
+
+func SetRandomize(blockId int64, surveyId int64, randomize bool) error {
+	_, err := global.Db.Exec("update blocks set randomize = $1 where id = $2 and survey_id = $3", randomize, blockId, surveyId)
 
 	return err
 }

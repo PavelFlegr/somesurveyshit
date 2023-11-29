@@ -34,6 +34,7 @@ type Block struct {
 	Id        int64
 	Title     string
 	SurveyId  int64
+	Randomize bool
 	Questions []Question
 }
 
@@ -47,12 +48,14 @@ type Question struct {
 }
 
 type Configuration struct {
-	Options      []Option
-	QuestionType string `json:questionType`
+	Options      []Option `json:"options"`
+	Randomize    bool     `json:"randomize"`
+	QuestionType string   `json:"questionType"`
 }
 
 type Option struct {
-	Label string `json:label`
+	Id    int64
+	Label string `json:"label"`
 }
 
 func (configuration Configuration) Value() (driver.Value, error) {

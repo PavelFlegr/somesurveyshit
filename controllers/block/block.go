@@ -2,13 +2,36 @@ package block
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"main/global"
 	"main/services"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
+
+func PutBlockRandomize(w http.ResponseWriter, r *http.Request) {
+	userId, authErr := global.CheckAuth(r)
+	if authErr != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+	blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+	if !services.HasPermission(userId, "survey", surveyId, "read") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	randomize := r.PostFormValue("randomize") == "true"
+	err := services.SetRandomize(blockId, surveyId, randomize)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
 
 func PutBlockTitle(w http.ResponseWriter, r *http.Request) {
 	userId, authErr := global.CheckAuth(r)

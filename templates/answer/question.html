@@ -12,7 +12,7 @@
         {{ if eq $.Configuration.QuestionType "single" }}
         <div>
             <label class="radio is-unselectable">
-                <input type="radio" name="{{$.Id}}" value="{{$i}}">
+                <input type="radio" name="{{$.Id}}" value="{{.Id}}">
                 {{.Label}}
             </label>
         </div>
@@ -20,7 +20,7 @@
         {{ if eq $.Configuration.QuestionType "multiple" }}
         <div>
             <label class="checkbox is-unselectable">
-                <input type="checkbox" name="{{$.Id}}" value="{{$i}}">
+                <input type="checkbox" name="{{$.Id}}" value="{{.Id}}">
                 {{.Label}}
             </label>
         </div>

@@ -15,17 +15,26 @@
     <div class="card is-radiusless">
         <header _="on click toggle .collapsed on next .card-content" class="card-header has-background-light is- is-clickable drag-handle">
             <span class="card-header-title">
-                <span class="subtitle is-flex">
-                    <span class="icon is-align-self-center">
-                        <span class="mdi mdi-drag"></span>
-                     </span>
-                    <span class="block-title">
-                        {{block "manage/block-title" .}}
-                        {{.Title}}
-                        <span hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/title/edit" _="on click halt the event" hx-target="closest .block-title" class="icon is-small is-clickable">
-                            <span class="mdi ml-2 mdi-pencil"></span>
+                <span class="subtitle is-align-items-center is-flex is-justify-content-space-between" style="width: 100%">
+                    <span class="is-flex is-align-items-center">
+                        <span class="icon">
+                            <span class="mdi mdi-drag"></span>
+                         </span>
+                        <span class="block-title">
+                            {{block "manage/block-title" .}}
+                            {{.Title}}
+                            <span hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/title/edit" onclick="event.stopPropagation()" hx-target="closest .block-title" class="icon is-small is-clickable">
+                                <span class="mdi ml-2 mdi-pencil"></span>
+                            </span>
+                            {{end}}
                         </span>
-                        {{end}}
+                    </span>
+                    <span onclick="event.stopPropagation()">
+                        <label class="checkbox">
+                            Randomize
+                            <input hx-put="/manage/survey/{{.SurveyId}}/block/{{.Id}}/randomize" hx-swap="none" type="checkbox" name="randomize" {{ if eq .Randomize true }} checked {{ end }} value="true">
+                        </label>
+                        
                     </span>
                 </span>
             </span>

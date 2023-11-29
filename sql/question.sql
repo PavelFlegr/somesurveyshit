@@ -5,13 +5,13 @@ drop table if exists questions cascade;
 drop table if exists survey_permissions cascade;
 drop table if exists responses cascade;
 
-create table users (
+create table if not exists users (
     id serial primary key,
     email varchar(255) not null unique,
     password varchar(255) not null
 );
 
-create table surveys (
+create table if not exists surveys (
     id serial primary key,
     user_id int not null,
     title varchar(255) not null,
@@ -21,11 +21,12 @@ create table surveys (
     constraint fk_user foreign key(user_id) references users(id) on delete cascade
 );
 
-create table blocks (
+create table if not exists blocks (
     id serial primary key,
     user_id int not null,
     survey_id int not null,
     title varchar(255) not null,
+    randomize boolean default(false) not null,
     created timestamptz,
     questions_order int[] default('{}') not null,
     constraint fk_user foreign key(user_id) references users(id) on delete cascade,
@@ -33,7 +34,7 @@ create table blocks (
 
 );
 
-create table questions (
+create table if not exists questions (
     id serial primary key,
     user_id int not null,
     survey_id int not null,
@@ -48,7 +49,7 @@ create table questions (
 
 create index question_survey_idx on questions (survey_id);
 
-create table survey_permissions (
+create table if not exists survey_permissions (
     user_id int not null,
     action varchar(255) not null,
     entity_id int not null,
@@ -57,7 +58,7 @@ create table survey_permissions (
     primary key (user_id, action, entity_id)
 );
 
-create table responses (
+create table if not exists responses (
     id serial primary key,
     survey_id int not null,
     response jsonb not null,

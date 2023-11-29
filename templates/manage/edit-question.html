@@ -27,6 +27,13 @@
                 <option value="multiple" {{ if eq .Configuration.QuestionType "multiple" }} selected {{ end }}>Multiple Choice</option>
             </select>
         </div>
+        <div class='randomize {{ if eq .Configuration.QuestionType "description" }} is-hidden {{end}}'>
+            <label class='checkbox'>
+            Randomize
+            <input type="checkbox" {{ if eq .Configuration.Randomize true }} checked {{ end }} name="randomize" value="true">
+        </label>
+        </div>
+        
         <div class='options-wrapper {{ if eq .Configuration.QuestionType "description" }} is-hidden {{end}}'>
             <div class="field options">
                 {{range $option := .Configuration.Options}}

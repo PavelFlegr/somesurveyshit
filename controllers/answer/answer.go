@@ -4,11 +4,15 @@ import (
 	"log"
 	"main/global"
 	"main/services"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
+
+var s = rand.NewSource(time.Now().UnixNano())
 
 type SurveyPage struct {
 	Survey     services.Survey
@@ -17,6 +21,32 @@ type SurveyPage struct {
 	ResponseId int64
 }
 
+func randomizeBlock(block *services.Block) {
+	shuffled := make([]services.Question, len(block.Questions))
+	for i, j := range rand.New(s).Perm(len(block.Questions)) {
+		shuffled[i] = block.Questions[j]
+	}
+	block.Questions = shuffled
+}
+
+func randomizeQuestions(questions []services.Question) {
+	for q := range questions {
+		if !questions[q].Configuration.Randomize {
+			continue
+		}
+		switch questions[q].Configuration.QuestionType {
+		case "multiple", "single":
+		default:
+			continue
+		}
+		shuffled := make([]services.Option, len(questions[q].Configuration.Options))
+		for i, j := range rand.New(s).Perm(len(questions[q].Configuration.Options)) {
+			shuffled[i] = questions[q].Configuration.Options[j]
+			shuffled[i].Id = int64(j)
+		}
+		questions[q].Configuration.Options = shuffled
+	}
+}
 func GetSurvey(w http.ResponseWriter, r *http.Request) {
 	surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 	pageNumber, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 0)
@@ -28,6 +58,10 @@ func GetSurvey(w http.ResponseWriter, r *http.Request) {
 	page.Survey = services.GetSurvey(surveyId)
 	page.Block, err = services.GetBlock(page.Survey.Blocks[pageNumber].Id, surveyId)
 	page.Page = pageNumber
+	if page.Block.Randomize {
+		randomizeBlock(&page.Block)
+	}
+	randomizeQuestions(page.Block.Questions)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)

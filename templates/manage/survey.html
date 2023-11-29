@@ -7,8 +7,8 @@
         return Array.from(e.parentNode.children).indexOf(e)
     }
     function switchQuestionType(el) {
-        console.log(el.closest('.question'));
         el.closest('.question').querySelector('.options-wrapper').classList.toggle('is-hidden', el.value === 'description')
+        el.closest('.question').querySelector('.randomize').classList.toggle('is-hidden', el.value === 'description')
     }
 
     htmx.onLoad((el) => {
