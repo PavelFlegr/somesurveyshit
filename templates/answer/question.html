@@ -8,6 +8,11 @@
             </div>
         </div>
         <div class="content">{{ unescape .Description }}</div>
+        {{ if eq $.Configuration.QuestionType "text" }}
+        <div style="max-width: 200px">
+            <input class="input" type="text" name="{{$.Id}}">
+        </div>
+        {{end}}
         {{range $i, $option := .Configuration.Options}}
         {{ if eq $.Configuration.QuestionType "single" }}
         <div>

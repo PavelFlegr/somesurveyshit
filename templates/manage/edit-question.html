@@ -23,18 +23,19 @@
         <div class="select mb-3">
             <select name="questionType" onchange="switchQuestionType(this)">
                 <option value="description" {{ if eq .Configuration.QuestionType "description" }} selected {{ end }}>Description</option>
+                <option value="text" {{ if eq .Configuration.QuestionType "text" }} selected {{end}}>Text</option>
                 <option value="single" {{ if eq .Configuration.QuestionType "single" }} selected {{ end }}>Single Choice</option>
                 <option value="multiple" {{ if eq .Configuration.QuestionType "multiple" }} selected {{ end }}>Multiple Choice</option>
             </select>
         </div>
-        <div class='randomize {{ if eq .Configuration.QuestionType "description" }} is-hidden {{end}}'>
+        <div class='randomize {{ if not (eq .Configuration.QuestionType "single" "multiple") }} is-hidden {{end}}'>
             <label class='checkbox'>
             Randomize
             <input type="checkbox" {{ if eq .Configuration.Randomize true }} checked {{ end }} name="randomize" value="true">
         </label>
         </div>
         
-        <div class='options-wrapper {{ if eq .Configuration.QuestionType "description" }} is-hidden {{end}}'>
+        <div class='options-wrapper {{ if not (eq .Configuration.QuestionType "single" "multiple") }} is-hidden {{end}}'>
             <div class="field options">
                 {{range $option := .Configuration.Options}}
                 {{block "manage/option" .}}

@@ -191,14 +191,11 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 
 		record = []string{}
 		for _, question := range questions {
-			answers := []string{""}
-			if slices.Contains([]string{"single", "multiple"}, question.Configuration.QuestionType) {
-				answers = response[fmt.Sprint(question.Id)]
-				if choice == "label" {
-					for i := range answers {
-						answer, _ := strconv.Atoi(answers[i])
-						answers[i] = question.Configuration.Options[answer].Label
-					}
+			answers := response[fmt.Sprint(question.Id)]
+			if slices.Contains([]string{"single", "multiple"}, question.Configuration.QuestionType) && choice == "label" {
+				for i := range answers {
+					answer, _ := strconv.Atoi(answers[i])
+					answers[i] = question.Configuration.Options[answer].Label
 				}
 			}
 
