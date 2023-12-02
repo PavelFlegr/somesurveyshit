@@ -2,6 +2,7 @@ package survey
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"main/global"
 	"main/services"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/exp/slices"
 )
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -154,6 +156,7 @@ func GetSurveyTitleEdit(w http.ResponseWriter, r *http.Request) {
 
 func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 	surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+	choice := r.FormValue("choice")
 
 	rows, err := global.Db.Query("select response from responses where survey_id = $1", surveyId)
 	if err != nil {
@@ -161,14 +164,13 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var questions []services.Question
+	survey := services.GetSurvey(surveyId)
 	questions, err = services.ListQuestionsBySurvey(surveyId)
-	var questionIds []string
 
 	csvWriter := csv.NewWriter(w)
 
 	var record []string
 	for _, question := range questions {
-		questionIds = append(questionIds, strconv.FormatInt(question.Id, 10))
 		record = append(record, question.Title)
 	}
 	err = csvWriter.Write(record)
@@ -177,6 +179,7 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%v.csv\"", survey.Title))
 	csvWriter.Flush()
 
 	var response services.Response
@@ -187,9 +190,19 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 		}
 
 		record = []string{}
-		for _, questionId := range questionIds {
-			answers := strings.Join(response[questionId], ",")
-			record = append(record, answers)
+		for _, question := range questions {
+			answers := []string{""}
+			if slices.Contains([]string{"single", "multiple"}, question.Configuration.QuestionType) {
+				answers = response[fmt.Sprint(question.Id)]
+				if choice == "label" {
+					for i := range answers {
+						answer, _ := strconv.Atoi(answers[i])
+						answers[i] = question.Configuration.Options[answer].Label
+					}
+				}
+			}
+
+			record = append(record, strings.Join(answers, ","))
 		}
 		err = csvWriter.Write(record)
 		if err != nil {

@@ -1,5 +1,12 @@
 {{define "manage/dashboard.html"}}
 {{template "header" .}}
+<script>
+    function showExportSettings(href, e) {
+        e.preventDefault()
+        document.getElementById("export").classList.toggle("is-active", true)
+        document.getElementById("export-form").action = href
+    }
+</script>
 <div class="section container">
     <form class="field" hx-post="/manage/survey" hx-target="tbody" hx-swap="beforeend">
         <span id="error"></span>
@@ -26,13 +33,38 @@
                 <td>{{.Created.Format "2. 1. 2006 15:04" }}</td>
                 <td>{{.Updated.Format "2. 1. 2006 15:04" }}</td>
                 <td><a target="_blank" href="/survey/{{.Id}}">Public link</a></td>
-                <td><a href="/manage/survey/{{.Id}}/download" download="survey{{.Id}}.csv">Download data</a></td>
+                <td><a onclick="showExportSettings('/manage/survey/{{.Id}}/download', event)">Download data</a></td>
                 <td><a hx-delete="/manage/survey/{{.Id}}" hx-target="closest tr" hx-swap="outerHTML" class="has-text-danger">Delete</a></td>
             </tr>
             {{end}}
             {{end}}
         </tbody>
     </table>
+    <div id="export" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <form id="export-form">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Download Data</p>
+                    <button type="button" class="delete" onclick="this.closest('.modal').classList.toggle('is-active', false)" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field">
+                        <label>Choice Value</label>
+                        <div class="select" style="vertical-align: baseline;">
+                            <select name="choice">
+                                <option value="id">Index</option>
+                                <option value="label">Text</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success">Export</button>
+                </footer>
+            </form>
+        </div>
+    </div>
 </div>
 {{template "footer" .}}
 {{end}}

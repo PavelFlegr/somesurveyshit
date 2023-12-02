@@ -91,14 +91,7 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 		if k == "responseId" {
 			continue
 		}
-		questionId, _ := strconv.ParseInt(k, 10, 0)
-		question := services.GetQuestion(surveyId, questionId)
-		answers := []string{}
-		for _, answer := range v {
-			answerIndex, _ := strconv.ParseInt(answer, 10, 0)
-			answers = append(answers, question.Configuration.Options[answerIndex].Label)
-		}
-		response[k] = answers
+		response[k] = v
 	}
 
 	var responseId int64
@@ -129,7 +122,7 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 	page.ResponseId = responseId
 
 	if page.Page < int64(len(page.Survey.Blocks)) {
-		page.Block, err = services.GetBlock(page.Survey.Blocks[page.Page].Id, surveyId)
+		page.Block, _ = services.GetBlock(page.Survey.Blocks[page.Page].Id, surveyId)
 		err := global.Template.ExecuteTemplate(w, "answer/survey.html", page)
 		if err != nil {
 			log.Println(err)
