@@ -58,6 +58,17 @@ type Option struct {
 	Label string `json:"label"`
 }
 
+type QuestionResponse []string
+
+type BlockResponse struct {
+	ClickTime  int64 `json:"clickTime"`
+	SubmitTime int64 `json:"submitTime"`
+}
+type Response struct {
+	Questions map[string]QuestionResponse `json:"questions"`
+	Blocks    map[string]BlockResponse    `json:"blocks"`
+}
+
 func (configuration Configuration) Value() (driver.Value, error) {
 	return json.Marshal(configuration)
 }
@@ -69,4 +80,17 @@ func (configuration *Configuration) Scan(value interface{}) error {
 	}
 
 	return json.Unmarshal(b, &configuration)
+}
+
+func (response Response) Value() (driver.Value, error) {
+	return json.Marshal(response)
+}
+
+func (response *Response) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &response)
 }

@@ -8,13 +8,41 @@
     <body>
         <form action="/survey/{{.Survey.Id}}?page={{.Page}}" method="post" class="section container">
             <input type="hidden" name="responseId" value="{{.ResponseId}}">
+            <input type="hidden" name="blockId" value="{{.Block.Id}}">
+            <input type="hidden" id="click" name="clickTime">
+            <input type="hidden" id="submit" name="submitTime">
             {{range $i, $question := .Block.Questions}}
             <div class="block question-container">
                 {{template "answer/question.html" $question}}
             </div>
             {{end}}
-            <button class="button is-primary">Submit</button>
+            <button id="button" class="button is-primary">Submit</button>
         </form>
     </body>
+    <script>
+        let start
+        addEventListener("load", () => {
+            start = performance.now()
+        })
+
+        click = () => {
+            removeEventListener("click", click)
+            document.getElementById("click").value = performance.now()  - start
+        }
+
+        submit = (e) => {
+            e.preventDefault()
+            removeEventListener("submit", submit)
+            document.getElementById("submit").value = performance.now() - start
+            setTimeout(()=> {
+                document.getElementById("button").click()
+            })
+            
+        }
+
+        addEventListener("click", click)
+
+        addEventListener("submit", submit)
+    </script>
 </html>
 {{end}}

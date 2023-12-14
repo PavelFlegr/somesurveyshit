@@ -163,15 +163,23 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 		log.Println("manage survey download", err)
 	}
 
-	var questions []services.Question
 	survey := services.GetSurvey(surveyId)
-	questions, err = services.ListQuestionsBySurvey(surveyId)
+	questions, _ := services.ListQuestionsBySurvey(surveyId)
+	blocks, _ := services.ListBlocks(surveyId)
 
 	csvWriter := csv.NewWriter(w)
 
 	var record []string
-	for _, question := range questions {
-		record = append(record, question.Title)
+	for _, block := range blocks {
+		record = append(record, block.Title)
+		record = append(record, "click time")
+		record = append(record, "submit time")
+		for _, question := range questions {
+			if question.BlockId != block.Id {
+				continue
+			}
+			record = append(record, question.Title)
+		}
 	}
 	err = csvWriter.Write(record)
 	if err != nil {
@@ -190,16 +198,25 @@ func DownloadSurvey(w http.ResponseWriter, r *http.Request) {
 		}
 
 		record = []string{}
-		for _, question := range questions {
-			answers := response[fmt.Sprint(question.Id)]
-			if slices.Contains([]string{"single", "multiple"}, question.Configuration.QuestionType) && choice == "label" {
-				for i := range answers {
-					answer, _ := strconv.Atoi(answers[i])
-					answers[i] = question.Configuration.Options[answer].Label
+		for _, block := range blocks {
+			blockResponse := response.Blocks[fmt.Sprint(block.Id)]
+			record = append(record, "")
+			record = append(record, fmt.Sprint(blockResponse.ClickTime))
+			record = append(record, fmt.Sprint(blockResponse.SubmitTime))
+			for _, question := range questions {
+				if question.BlockId != block.Id {
+					continue
 				}
-			}
+				answers := response.Questions[fmt.Sprint(question.Id)]
+				if slices.Contains([]string{"single", "multiple"}, question.Configuration.QuestionType) && choice == "label" {
+					for i := range answers {
+						answer, _ := strconv.Atoi(answers[i])
+						answers[i] = question.Configuration.Options[answer].Label
+					}
+				}
 
-			record = append(record, strings.Join(answers, ","))
+				record = append(record, strings.Join(answers, ","))
+			}
 		}
 		err = csvWriter.Write(record)
 		if err != nil {

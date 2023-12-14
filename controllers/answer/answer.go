@@ -1,6 +1,7 @@
 package answer
 
 import (
+	"fmt"
 	"log"
 	"main/global"
 	"main/services"
@@ -50,6 +51,18 @@ func randomizeQuestions(questions []services.Question) {
 		questions[q].Configuration.Options = shuffled
 	}
 }
+
+func RenderPage(w http.ResponseWriter, page SurveyPage) {
+	if page.Block.Randomize {
+		randomizeBlock(&page.Block)
+	}
+	randomizeQuestions(page.Block.Questions)
+	err := global.Template.ExecuteTemplate(w, "answer/survey.html", page)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func GetSurvey(w http.ResponseWriter, r *http.Request) {
 	surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
 	pageNumber, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 0)
@@ -59,21 +72,10 @@ func GetSurvey(w http.ResponseWriter, r *http.Request) {
 
 	var page SurveyPage
 	page.Survey = services.GetSurvey(surveyId)
-	page.Block, err = services.GetBlock(page.Survey.Blocks[pageNumber].Id, surveyId)
+	page.Block, _ = services.GetBlock(page.Survey.Blocks[pageNumber].Id, surveyId)
 	page.Page = pageNumber
-	if page.Block.Randomize {
-		randomizeBlock(&page.Block)
-	}
-	randomizeQuestions(page.Block.Questions)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = global.Template.ExecuteTemplate(w, "answer/survey.html", page)
-	if err != nil {
-		log.Println(err)
-	}
+
+	RenderPage(w, page)
 }
 
 func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
@@ -89,12 +91,23 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := services.Response{}
+	response := services.Response{
+		Questions: map[string]services.QuestionResponse{},
+		Blocks:    map[string]services.BlockResponse{},
+	}
 	for k, v := range r.PostForm {
-		if k == "responseId" {
+		if k == "responseId" || k == "clickTime" || k == "submitTime" || k == "blockId" {
 			continue
 		}
-		response[k] = v
+		response.Questions[k] = v
+	}
+
+	clickTime, _ := strconv.ParseInt(r.PostFormValue("clickTime"), 10, 0)
+	submitTime, _ := strconv.ParseInt(r.PostFormValue("submitTime"), 10, 0)
+
+	response.Blocks[fmt.Sprint(r.PostFormValue("blockId"))] = services.BlockResponse{
+		ClickTime:  clickTime,
+		SubmitTime: submitTime,
 	}
 
 	var responseId int64
@@ -126,10 +139,7 @@ func SubmitAnswers(w http.ResponseWriter, r *http.Request) {
 
 	if page.Page < int64(len(page.Survey.Blocks)) {
 		page.Block, _ = services.GetBlock(page.Survey.Blocks[page.Page].Id, surveyId)
-		err := global.Template.ExecuteTemplate(w, "answer/survey.html", page)
-		if err != nil {
-			log.Println(err)
-		}
+		RenderPage(w, page)
 		return
 	}
 

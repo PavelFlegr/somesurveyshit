@@ -1,9 +1,6 @@
 package services
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"log"
 	"main/global"
 	"time"
@@ -122,30 +119,6 @@ func ReorderBlock(surveyId int64, blockId int64, index int) {
 	}
 }
 
-type Response map[string][]string
-
-func (a Response) Value() (driver.Value, error) {
-	return json.Marshal(a)
-}
-
-func (a *Response) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion []byte failed")
-	}
-	x := make(map[string][]string)
-	if err := json.Unmarshal(b, &x); err != nil {
-		return err
-	}
-
-	*a = make(Response, len(x))
-	for k, v := range x {
-		(*a)[k] = v
-	}
-
-	return nil
-}
-
 func RecordResponse(surveyId int64, response Response) (int64, error) {
 	var responseId int64
 	err := global.Db.QueryRow("insert into responses (survey_id, response) VALUES ($1, $2) returning id", surveyId, response).Scan(&responseId)
@@ -157,7 +130,15 @@ func RecordResponse(surveyId int64, response Response) (int64, error) {
 }
 
 func MergeResponse(responseId int64, response Response) error {
-	_, err := global.Db.Exec("update responses set response = response || $1 where id = $2", response, responseId)
+	var old Response
+	global.Db.QueryRow("select response from responses where id = $1", responseId).Scan(&old)
+	for k, v := range response.Blocks {
+		old.Blocks[k] = v
+	}
+	for k, v := range response.Questions {
+		old.Questions[k] = v
+	}
+	_, err := global.Db.Exec("update responses set response = $1 where id = $2", old, responseId)
 	if err != nil {
 		log.Println(err)
 	}
