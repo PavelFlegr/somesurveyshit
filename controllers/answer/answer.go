@@ -31,13 +31,16 @@ func randomizeBlock(block *services.Block) {
 
 func randomizeQuestions(questions []services.Question) {
 	for q := range questions {
-		if !questions[q].Configuration.Randomize {
-			continue
-		}
 		switch questions[q].Configuration.QuestionType {
 		case "multiple", "single":
 		default:
 			continue
+		}
+		if !questions[q].Configuration.Randomize {
+			for i := range questions[q].Configuration.Options {
+				questions[q].Configuration.Options[i].Id = int64(i)
+			}
+			return
 		}
 		shuffled := make([]services.Option, len(questions[q].Configuration.Options))
 		for i, j := range rand.New(s).Perm(len(questions[q].Configuration.Options)) {
