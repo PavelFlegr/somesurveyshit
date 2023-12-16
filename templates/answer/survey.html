@@ -19,17 +19,25 @@
             <button id="button" class="button is-primary">Submit</button>
         </form>
     </body>
+    {{if .Block.Submit}}
+    <script>
+        let submitAfter = +"{{.Block.SubmitAfter}}"
+        addEventListener("load", () => {
+            setTimeout(() => {
+                document.getElementById("button").click()
+            }, submitAfter*1000)
+        })    
+    </script>
+    {{end}}
     <script>
         let start
         addEventListener("load", () => {
             start = performance.now()
         })
-
         click = () => {
             removeEventListener("click", click)
             document.getElementById("click").value = performance.now()  - start
         }
-
         submit = (e) => {
             e.preventDefault()
             removeEventListener("submit", submit)

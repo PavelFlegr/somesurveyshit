@@ -85,6 +85,7 @@ func RegisterRoutes(r chi.Router) {
 	r.Get("/manage/survey/{surveyId}/block/{blockId}/title/edit", block.GetBlockTitleEdit)
 	r.Post("/manage/survey/{surveyId}/block/{blockId}/reorder", block.ReorderBlock)
 	r.Post("/manage/survey/{surveyId}/block", block.CreateBlock)
+	r.Patch("/manage/survey/{surveyId}/block/{blockId}", block.PatchBlock)
 	r.Get("/manage/survey/{surveyId}/block/{blockId}/question", block.ListQuestions)
 	r.Delete("/manage/survey/{surveyId}/block/{blockId}", block.DeleteBlock)
 

@@ -34,12 +34,22 @@
                             Randomize
                             <input hx-put="/manage/survey/{{.SurveyId}}/block/{{.Id}}/randomize" hx-swap="none" type="checkbox" name="randomize" {{ if eq .Randomize true }} checked {{ end }} value="true">
                         </label>
-                        
                     </span>
                 </span>
             </span>
         </header>
         <div hx-get="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-trigger="load" hx-swap="afterbegin" hx-target="find .questions" class="card-content collapsed">
+            <form>
+                <div class="field is-horizontal">
+                    <label class="field-label is-normal checkbox">
+                        Submit after (seconds)
+                        <input hx-patch="/manage/survey/{{.SurveyId}}/block/{{.Id}}" hx-target="this" {{if .Submit}}checked{{end}} name="submit" hx-trigger="change" type="checkbox" value="true">
+                    </label>
+                    <div class="control">
+                        <input hx-patch="/manage/survey/{{.SurveyId}}/block/{{.Id}}" hx-target="this" value="{{.SubmitAfter}}" class="input" hx-trigger="keyup changed throttle:500ms" type="number" min="0" name="submitAfter">
+                    </div>
+                </div>
+            </form>
             <div class="questions" data-blockid="{{.Id}}"></div>
             <button hx-target="previous .questions" hx-post="/manage/survey/{{.SurveyId}}/block/{{.Id}}/question" hx-swap="beforeend" class="button is-primary is-inverted mx-auto is-block mt-5">
                     <span class="icon">

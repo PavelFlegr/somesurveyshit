@@ -31,11 +31,13 @@ type Survey struct {
 }
 
 type Block struct {
-	Id        int64
-	Title     string
-	SurveyId  int64
-	Randomize bool
-	Questions []Question
+	Id          int64
+	Title       string
+	SurveyId    int64
+	Randomize   bool
+	Submit      bool
+	SubmitAfter float64
+	Questions   []Question
 }
 
 type Question struct {

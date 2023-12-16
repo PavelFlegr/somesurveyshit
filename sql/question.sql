@@ -27,6 +27,8 @@ create table if not exists blocks (
     survey_id int not null,
     title varchar(255) not null,
     randomize boolean default(false) not null,
+    submit boolean default(false) not null,
+    submit_after float default(1) not null,
     created timestamptz,
     questions_order int[] default('{}') not null,
     constraint fk_user foreign key(user_id) references users(id) on delete cascade,

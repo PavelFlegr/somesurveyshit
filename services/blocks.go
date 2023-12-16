@@ -1,8 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"main/global"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -17,7 +19,7 @@ func CountBlocks(surveyId int64) int64 {
 }
 
 func CreateBlock(block *Block, userId int64) error {
-	var err = global.Db.QueryRow("insert into blocks (user_id, survey_id, title, created) values ($1, $2, $3, now()) returning id", userId, block.SurveyId, block.Title).Scan(&block.Id)
+	var err = global.Db.QueryRow("insert into blocks (user_id, survey_id, title, created) values ($1, $2, $3, now()) returning id, submit_after", userId, block.SurveyId, block.Title).Scan(&block.Id, &block.SubmitAfter)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -32,7 +34,7 @@ func CreateBlock(block *Block, userId int64) error {
 }
 
 func ListBlocks(surveyId int64) ([]Block, error) {
-	var rows, err = global.Db.Query("select id, title, randomize from blocks where survey_id = $1", surveyId)
+	var rows, err = global.Db.Query("select id, title, randomize, submit, submit_after from blocks where survey_id = $1", surveyId)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -41,7 +43,7 @@ func ListBlocks(surveyId int64) ([]Block, error) {
 	var blocks []Block
 	for rows.Next() {
 		var block = Block{SurveyId: surveyId}
-		err = rows.Scan(&block.Id, &block.Title, &block.Randomize)
+		err = rows.Scan(&block.Id, &block.Title, &block.Randomize, &block.Submit, &block.SubmitAfter)
 		if err != nil {
 			log.Println(err)
 			return nil, err
@@ -56,7 +58,15 @@ func ListBlocks(surveyId int64) ([]Block, error) {
 func GetBlock(blockId int64, surveyId int64) (Block, error) {
 	block := Block{Id: blockId}
 	var questionsOrder []int64
-	var err = global.Db.QueryRow("select id, survey_id, title, randomize, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(&block.Id, &block.SurveyId, &block.Title, &block.Randomize, (*pq.Int64Array)(&questionsOrder))
+	var err = global.Db.QueryRow("select id, survey_id, title, randomize, submit, submit_after, questions_order from blocks where id = $1 and survey_id = $2", blockId, surveyId).Scan(
+		&block.Id,
+		&block.SurveyId,
+		&block.Title,
+		&block.Randomize,
+		&block.Submit,
+		&block.SubmitAfter,
+		(*pq.Int64Array)(&questionsOrder),
+	)
 	if err != nil {
 		log.Println(err)
 		return block, err
@@ -100,6 +110,28 @@ func RemoveBlock(surveyId int64, blockId int64) error {
 
 func RenameBlock(blockId int64, surveyId int64, title string) error {
 	_, err := global.Db.Exec("update blocks set title = $1 where id = $2 and survey_id = $3", title, blockId, surveyId)
+
+	return err
+}
+
+type Record struct {
+	Key   string
+	Value any
+}
+
+func UpdateBlock(blockId int64, surveyId int64, data []Record) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	fields := []string{}
+	values := []any{blockId, surveyId}
+	for i := range data {
+		fields = append(fields, fmt.Sprintf("%v = $%v", data[i].Key, i+3))
+		values = append(values, data[i].Value)
+	}
+	query := fmt.Sprintf("update blocks set %v where id = $1 and survey_id = $2", strings.Join(fields, ","))
+	_, err := global.Db.Exec(query, values...)
 
 	return err
 }

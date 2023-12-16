@@ -200,3 +200,35 @@ func DeleteBlock(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 }
+
+func PatchBlock(w http.ResponseWriter, r *http.Request) {
+	userId, authErr := global.CheckAuth(r)
+	if authErr != nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	blockId, _ := strconv.ParseInt(chi.URLParam(r, "blockId"), 10, 0)
+	surveyId, _ := strconv.ParseInt(chi.URLParam(r, "surveyId"), 10, 0)
+	if !services.HasPermission(userId, "survey", surveyId, "edit") {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	data := []services.Record{}
+
+	submit := r.PostFormValue("submit")
+	submitAfter := r.PostFormValue("submitAfter")
+	parsedSubmitAfter, err := strconv.ParseFloat(submitAfter, 64)
+	if submitAfter != "" && err == nil {
+		data = append(data, services.Record{Key: "submit", Value: submit == "true"})
+		data = append(data, services.Record{Key: "submit_after", Value: parsedSubmitAfter})
+	}
+
+	if len(data) > 0 {
+		err := services.UpdateBlock(surveyId, blockId, data)
+		if err != nil {
+			log.Print(err)
+		}
+	}
+}
